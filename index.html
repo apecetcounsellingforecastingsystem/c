@@ -1,0 +1,561 @@
+{% extends "base.html" %}
+{% block title %}AP ECET Counselling Forecasting System — Lateral Entry B.Tech Seat Predictor{% endblock %}
+
+{% block content %}
+<!-- ========================================================================
+     HERO SECTION (Matches Reference Design)
+     ======================================================================== -->
+<section class="hero-wrapper" id="home">
+  <div class="hero-glow-bg"></div>
+  <div class="hero-glow-bg-2"></div>
+
+  <div class="hero-grid">
+    <!-- Left Hero Column -->
+    <div>
+      <!-- Pill Badge -->
+      <div class="hero-pill-badge">
+        <span class="pill-tag">AP ECET 2026</span>
+        <span>Lateral Entry B.Tech Admission Forecaster</span>
+      </div>
+
+      <!-- Main Headline -->
+      <h1 class="hero-title">
+        Predict Your Engineering Seat with <span class="gradient-text-hero">Data-Driven Precision</span>.
+      </h1>
+
+      <!-- Description -->
+      <p class="hero-subtitle">
+        Empowering diploma engineers with weighted multi-year historical cutoff forecasting, 
+        Safe/Moderate/Low seat classification, and personalized round-wise counseling recommendations.
+      </p>
+
+      <!-- Action Buttons -->
+      <div class="hero-cta-buttons">
+        {% if session.get('user_id') %}
+          <a href="{{ url_for('predict_page') }}" class="btn-primary-glass" style="padding: 0.85rem 1.85rem; font-size: 1rem; border-radius: var(--radius-sm);">
+            <span style="font-size: 1.1rem;">⚙️</span> Start Admission Prediction
+          </a>
+          <a href="{{ url_for('colleges_page') }}" class="btn-secondary-glass" style="padding: 0.85rem 1.6rem; font-size: 1rem;">
+            <span>🔍</span> Search AP Colleges
+          </a>
+        {% else %}
+          <a href="{{ url_for('login') }}" class="btn-primary-glass auth-required-btn" data-feature="Admission Prediction Engine" style="padding: 0.85rem 1.85rem; font-size: 1rem; border-radius: var(--radius-sm);">
+            <span style="font-size: 1.1rem;">⚙️</span> Start Admission Prediction
+          </a>
+          <a href="{{ url_for('colleges_page') }}" class="btn-secondary-glass auth-required-btn" data-feature="AP Colleges Directory" style="padding: 0.85rem 1.6rem; font-size: 1rem;">
+            <span>🔍</span> Search AP Colleges
+          </a>
+        {% endif %}
+      </div>
+
+      <!-- Quick Metrics Row -->
+      <div class="hero-metrics-row">
+        <div class="hero-metric-item">
+          <div class="metric-val">{{ total_colleges or '25+' }}</div>
+          <div class="metric-label">Autonomous Colleges</div>
+        </div>
+        <div class="hero-metric-item">
+          <div class="metric-val">5-Year</div>
+          <div class="metric-label">Weighted Trend Model</div>
+        </div>
+        <div class="hero-metric-item">
+          <div class="metric-val">3 Rounds</div>
+          <div class="metric-label">Sliding Simulations</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Hero Column: High Probability Match Preview Card -->
+    <div>
+      <div class="forecast-preview-card">
+        <!-- Card Top Bar -->
+        <div class="preview-card-header">
+          <div class="match-badge">
+            <span>🛡️</span> HIGH PROBABILITY MATCH
+          </div>
+          <div style="font-size: 0.85rem; color: var(--text-muted); font-weight: 500;">
+            Forecast 2026
+          </div>
+        </div>
+
+        <!-- College & Branch Info -->
+        <h3 class="preview-college-title">
+          JNTUK Univ. College of Engg., Kakinada
+        </h3>
+        <div class="preview-branch-title">
+          Computer Science & Engineering (Lateral Entry)
+        </div>
+
+        <!-- Subcard with details -->
+        <div class="preview-subcard">
+          <div class="preview-subrow">
+            <span class="label">Candidate Rank:</span>
+            <span class="val">#145 (OC Category)</span>
+          </div>
+          <div class="preview-subrow">
+            <span class="label">Expected Cutoff:</span>
+            <span class="val" style="color: var(--accent-blue);">Closing ~180</span>
+          </div>
+          <div class="preview-subrow">
+            <span class="label">Admission Odds:</span>
+            <span class="badge-safe" style="font-size: 0.78rem; padding: 0.2rem 0.65rem;">88% (SAFE)</span>
+          </div>
+        </div>
+
+        <!-- Footnote Check -->
+        <div class="preview-footer-note">
+          <span>✓</span> AU Local Region candidate preference applied.
+        </div>
+
+        <!-- Card Button -->
+        <a href="{% if session.get('user_id') %}{{ url_for('predict_page') }}{% else %}{{ url_for('login') }}{% endif %}" 
+           class="btn-card-action {% if not session.get('user_id') %}auth-required-btn{% endif %}" 
+           data-feature="Candidate Rank Predictor">
+          <span>⚡</span> Try with Your Rank
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========================================================================
+     INTERACTIVE QUICK ESTIMATOR STRIP
+     ======================================================================== -->
+<section style="margin-bottom: 4rem;">
+  <div class="glass-panel" style="padding: 2rem 2.5rem;">
+    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1.5rem; margin-bottom: 1.5rem;">
+      <div>
+        <h3 style="font-size: 1.35rem; margin-bottom: 0.35rem;">⚡ Instant Cutoff Probability Estimator</h3>
+        <p style="color: var(--text-secondary); font-size: 0.9rem;">Test a quick rank scenario to preview your seat match probability before logging in.</p>
+      </div>
+      <span class="badge-safe" style="font-size: 0.85rem;">2026 Forecast Ready</span>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) 160px; gap: 1rem; align-items: flex-end;">
+      <div>
+        <label class="form-label">AP ECET Rank</label>
+        <input type="number" id="quickRankInput" class="form-control" placeholder="e.g. 150, 850, 2400" min="1" max="150000" value="350">
+      </div>
+      <div>
+        <label class="form-label">Diploma Branch</label>
+        <select id="quickBranchSelect" class="form-select">
+          <option value="Computer Science & Engineering">Computer Science & Engineering</option>
+          <option value="Electronics & Communication Engineering">Electronics & Communication Engineering</option>
+          <option value="Electrical & Electronics Engineering">Electrical & Electronics Engineering</option>
+          <option value="Mechanical Engineering">Mechanical Engineering</option>
+          <option value="Civil Engineering">Civil Engineering</option>
+          <option value="Information Technology">Information Technology</option>
+        </select>
+      </div>
+      <div>
+        <label class="form-label">Quota Region</label>
+        <select id="quickRegionSelect" class="form-select">
+          <option value="AU">Andhra University (AU)</option>
+          <option value="SVU">Sri Venkateswara (SVU)</option>
+          <option value="UR">Statewide / Non-Local (UR)</option>
+        </select>
+      </div>
+      <div>
+        <button type="button" id="btnQuickEstimate" class="btn-primary-glass" style="width: 100%; padding: 0.75rem;">
+          Estimate Odds
+        </button>
+      </div>
+    </div>
+
+    <div id="quickEstimateResult" style="display: none;"></div>
+  </div>
+</section>
+
+<!-- ========================================================================
+     KEY FEATURES & CAPABILITIES
+     ======================================================================== -->
+<section style="margin-bottom: 4.5rem;">
+  <div style="text-align: center; max-width: 750px; margin: 0 auto 3rem;">
+    <span style="color: var(--accent-cyan); font-weight: 700; font-size: 0.85rem; letter-spacing: 0.08em; text-transform: uppercase;">Engine Features</span>
+    <h2 style="font-size: 2.3rem; margin-top: 0.4rem; margin-bottom: 0.75rem;">Designed Exclusively for AP ECET Lateral Entry</h2>
+    <p style="color: var(--text-secondary); font-size: 1rem;">From raw historical cutoff spreadsheets to machine learning probability scores and personalized web option order sheets.</p>
+  </div>
+
+  <div class="features-grid">
+    <!-- Card 1 -->
+    <div class="feature-glass-box">
+      <div class="feature-icon-wrapper">🤖</div>
+      <h3 style="font-size: 1.2rem; margin-bottom: 0.6rem;">Hybrid ML Ensemble Models</h3>
+      <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.55;">
+        Combines Linear Regression, Decision Tree, and Random Forest models weighted by historical variance to yield accurate cutoff projections.
+      </p>
+    </div>
+
+    <!-- Card 2 -->
+    <div class="feature-glass-box">
+      <div class="feature-icon-wrapper">📊</div>
+      <h3 style="font-size: 1.2rem; margin-bottom: 0.6rem;">Multi-Year Cutoff Ingestion</h3>
+      <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.55;">
+        Complete historical closing rank data spanning 2023, 2024, and forecasted 2025–2026 across Round 1, Round 2, and Final Sliding rounds.
+      </p>
+    </div>
+
+    <!-- Card 3 -->
+    <div class="feature-glass-box">
+      <div class="feature-icon-wrapper">🎯</div>
+      <h3 style="font-size: 1.2rem; margin-bottom: 0.6rem;">Explainable AI Categorization</h3>
+      <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.55;">
+        Colleges automatically categorized into <b>Safe (&gt;80%)</b>, <b>Moderate (50-80%)</b>, <b>Ambitious (20-50%)</b>, and <b>Dream (&lt;20%)</b> brackets.
+      </p>
+    </div>
+
+    <!-- Card 4 -->
+    <div class="feature-glass-box">
+      <div class="feature-icon-wrapper">🏛️</div>
+      <h3 style="font-size: 1.2rem; margin-bottom: 0.6rem;">Region & Reservation Engine</h3>
+      <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.55;">
+        Full handling of Andhra University (AU), Sri Venkateswara University (SVU), and Statewide (UR) local rules across OC, BC, SC, ST, and EWS quotas.
+      </p>
+    </div>
+
+    <!-- Card 5 -->
+    <div class="feature-glass-box">
+      <div class="feature-icon-wrapper">🔮</div>
+      <h3 style="font-size: 1.2rem; margin-bottom: 0.6rem;">What-If Admission Simulator</h3>
+      <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.55;">
+        Simulate cutoff shifts, fee caps, quota adjustments, or branch changes dynamically with instant odds recalculated on the fly.
+      </p>
+    </div>
+
+    <!-- Card 6 -->
+    <div class="feature-glass-box">
+      <div class="feature-icon-wrapper">📄</div>
+      <h3 style="font-size: 1.2rem; margin-bottom: 0.6rem;">Smart Preference List & PDF</h3>
+      <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.55;">
+        Interactive drag-and-drop web option ordering with one-click export to official APSCHE choice filling PDF and CSV formats.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ========================================================================
+     HOW IT WORKS (3-Step Guided Roadmap)
+     ======================================================================== -->
+<section id="how-it-works" style="margin-bottom: 4.5rem; scroll-margin-top: 100px;">
+  <div style="text-align: center; max-width: 750px; margin: 0 auto 3rem;">
+    <span style="color: var(--accent-cyan); font-weight: 700; font-size: 0.85rem; letter-spacing: 0.08em; text-transform: uppercase;">Streamlined Workflow</span>
+    <h2 style="font-size: 2.3rem; margin-top: 0.4rem; margin-bottom: 0.75rem;">How the Forecasting System Works</h2>
+    <p style="color: var(--text-secondary); font-size: 1rem;">Three straightforward steps to turn your AP ECET rank into an optimal counseling strategy.</p>
+  </div>
+
+  <div class="step-container">
+    <!-- Step 1 -->
+    <div class="step-card">
+      <div class="step-number">01</div>
+      <div style="font-size: 2.2rem; margin-bottom: 1rem;">📝</div>
+      <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem;">Enter Your Profile</h3>
+      <p style="color: var(--text-secondary); font-size: 0.92rem; line-height: 1.6;">
+        Input your AP ECET rank, diploma branch, social category (OC, BC, SC, ST, EWS), gender, university region (AU / SVU), and maximum college fee preference.
+      </p>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="step-card">
+      <div class="step-number">02</div>
+      <div style="font-size: 2.2rem; margin-bottom: 1rem;">⚙️</div>
+      <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem;">AI Trend Computation</h3>
+      <p style="color: var(--text-secondary); font-size: 0.92rem; line-height: 1.6;">
+        The system queries multi-year cutoff data, executes regression and tree ensemble weights, and flags autonomous and university colleges fitting your quota.
+      </p>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="step-card">
+      <div class="step-number">03</div>
+      <div style="font-size: 2.2rem; margin-bottom: 1rem;">📑</div>
+      <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem;">Build & Export Options</h3>
+      <p style="color: var(--text-secondary); font-size: 0.92rem; line-height: 1.6;">
+        Reorder colleges by preference, verify cutoff buffer safety margins, and download your finalized preference list in ready-to-fill PDF format.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ========================================================================
+     TOP COLLEGES SPOTLIGHT (Interactive preview)
+     ======================================================================== -->
+<section id="colleges-preview" style="margin-bottom: 4.5rem;">
+  <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; gap: 1rem;">
+    <div>
+      <span style="color: var(--accent-cyan); font-weight: 700; font-size: 0.85rem; letter-spacing: 0.08em; text-transform: uppercase;">Institution Directory</span>
+      <h2 style="font-size: 2rem; margin-top: 0.3rem;">Top AP Engineering Colleges Covered</h2>
+    </div>
+    <a href="{{ url_for('colleges_page') if session.get('user_id') else url_for('login') }}" 
+       class="btn-secondary-glass {% if not session.get('user_id') %}auth-required-nav{% endif %}" 
+       data-feature="Full AP Colleges Directory">
+      Explore All Colleges →
+    </a>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem;">
+    <!-- College 1 -->
+    <div class="glass-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+      <div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+          <span class="badge-safe" style="font-size: 0.75rem;">AU Region</span>
+          <span style="font-size: 0.8rem; color: var(--text-muted);">Autonomous • Govt</span>
+        </div>
+        <h4 style="font-size: 1.15rem; margin-bottom: 0.4rem;">JNTUK Univ. College of Engg.</h4>
+        <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 1rem;">Kakinada, East Godavari • Code: JNTK</p>
+        <div style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.5;">
+          Premier technological university college offering lateral entry in CSE, ECE, EEE, MEC, CIV, and INF.
+        </div>
+      </div>
+      <div style="margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 0.85rem; font-weight: 600; color: var(--accent-blue);">Top Cutoff: Rank ~180</span>
+        <a href="{{ url_for('college_detail', college_code='JNTK') if session.get('user_id') else url_for('login') }}" 
+           class="btn-secondary-glass {% if not session.get('user_id') %}auth-required-btn{% endif %}" 
+           data-feature="JNTUK College Details"
+           style="padding: 0.35rem 0.8rem; font-size: 0.8rem;">
+          View Details
+        </a>
+      </div>
+    </div>
+
+    <!-- College 2 -->
+    <div class="glass-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+      <div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+          <span class="badge-safe" style="font-size: 0.75rem;">AU Region</span>
+          <span style="font-size: 0.8rem; color: var(--text-muted);">Autonomous • Govt</span>
+        </div>
+        <h4 style="font-size: 1.15rem; margin-bottom: 0.4rem;">AU College of Engineering</h4>
+        <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 1rem;">Visakhapatnam • Code: AUCE</p>
+        <div style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.5;">
+          Historic university engineering campus with high placement records and high research funding.
+        </div>
+      </div>
+      <div style="margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 0.85rem; font-weight: 600; color: var(--accent-blue);">Top Cutoff: Rank ~120</span>
+        <a href="{{ url_for('college_detail', college_code='AUCE') if session.get('user_id') else url_for('login') }}" 
+           class="btn-secondary-glass {% if not session.get('user_id') %}auth-required-btn{% endif %}" 
+           data-feature="AUCE College Details"
+           style="padding: 0.35rem 0.8rem; font-size: 0.8rem;">
+          View Details
+        </a>
+      </div>
+    </div>
+
+    <!-- College 3 -->
+    <div class="glass-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+      <div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+          <span class="badge-moderate" style="font-size: 0.75rem;">SVU Region</span>
+          <span style="font-size: 0.8rem; color: var(--text-muted);">Autonomous • Govt</span>
+        </div>
+        <h4 style="font-size: 1.15rem; margin-bottom: 0.4rem;">JNTUA College of Engineering</h4>
+        <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 1rem;">Anantapur • Code: JNTA</p>
+        <div style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.5;">
+          Flagship university campus serving Rayalaseema region students with modern infrastructure.
+        </div>
+      </div>
+      <div style="margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center;">
+        <span style="font-size: 0.85rem; font-weight: 600; color: var(--accent-blue);">Top Cutoff: Rank ~420</span>
+        <a href="{{ url_for('college_detail', college_code='JNTA') if session.get('user_id') else url_for('login') }}" 
+           class="btn-secondary-glass {% if not session.get('user_id') %}auth-required-btn{% endif %}" 
+           data-feature="JNTUA College Details"
+           style="padding: 0.35rem 0.8rem; font-size: 0.8rem;">
+          View Details
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========================================================================
+     ABOUT SECTION
+     ======================================================================== -->
+<section id="about" style="margin-bottom: 4.5rem; scroll-margin-top: 100px;">
+  <div class="glass-panel" style="padding: 3rem 2.5rem;">
+    <div style="max-width: 850px; margin: 0 auto;">
+      <span style="color: var(--accent-cyan); font-weight: 700; font-size: 0.85rem; letter-spacing: 0.08em; text-transform: uppercase;">About the Platform</span>
+      <h2 style="font-size: 2.2rem; margin-top: 0.35rem; margin-bottom: 1.25rem;">Democratizing Lateral Entry Admissions in Andhra Pradesh</h2>
+
+      <p style="color: var(--text-secondary); font-size: 1rem; line-height: 1.7; margin-bottom: 1.25rem;">
+        The <b>Andhra Pradesh Engineering Common Entrance Test (AP ECET)</b> is conducted by the Department of Technical Education 
+        and APSCHE for Diploma holders in Engineering & Technology and B.Sc. (Mathematics) degree holders for lateral entry admission 
+        into the 2nd year of regular B.E. / B.Tech courses.
+      </p>
+
+      <p style="color: var(--text-secondary); font-size: 1rem; line-height: 1.7; margin-bottom: 1.5rem;">
+        Due to multi-round web counseling dynamics, regional quota reservations (Andhra University vs. Sri Venkateswara University area), 
+        and annual cutoff rank fluctuations, candidates frequently struggle to identify their genuine chances of admission into top autonomous institutions.
+      </p>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; margin-top: 2rem;">
+        <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: 1.25rem;">
+          <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">📈</div>
+          <h4 style="font-size: 1.05rem; margin-bottom: 0.35rem;">Multi-Year Ingestion</h4>
+          <p style="color: var(--text-muted); font-size: 0.85rem;">Ingests real closing rank datasets across 2023 and 2024 with normalized 2025–2026 predictions.</p>
+        </div>
+        <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: 1.25rem;">
+          <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">⚖️</div>
+          <h4 style="font-size: 1.05rem; margin-bottom: 0.35rem;">Local vs. Non-Local Quota</h4>
+          <p style="color: var(--text-muted); font-size: 0.85rem;">Applies the statutory 85% local candidate quota and 15% open merit unreserved (UR) calculation rules.</p>
+        </div>
+        <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--glass-border); border-radius: var(--radius-md); padding: 1.25rem;">
+          <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">🛡️</div>
+          <h4 style="font-size: 1.05rem; margin-bottom: 0.35rem;">Zero Bias Analytics</h4>
+          <p style="color: var(--text-muted); font-size: 0.85rem;">Objective mathematical modeling ensuring students maximize their chances at government and autonomous colleges.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ========================================================================
+     CONTACT & HELPDESK SECTION
+     ======================================================================== -->
+<section id="contact" style="margin-bottom: 4rem; scroll-margin-top: 100px;">
+  <div style="text-align: center; max-width: 700px; margin: 0 auto 3rem;">
+    <span style="color: var(--accent-cyan); font-weight: 700; font-size: 0.85rem; letter-spacing: 0.08em; text-transform: uppercase;">Assistance & Inquiries</span>
+    <h2 style="font-size: 2.2rem; margin-top: 0.35rem; margin-bottom: 0.75rem;">Contact the Counseling Helpdesk</h2>
+    <p style="color: var(--text-secondary); font-size: 0.95rem;">Have questions about cutoff calculations, document verification, or counseling phases? Reach out to our team.</p>
+  </div>
+
+  <div style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 2.5rem; align-items: flex-start;">
+    <!-- Contact Details & FAQ -->
+    <div>
+      <div class="glass-card" style="margin-bottom: 1.5rem;">
+        <h3 style="font-size: 1.2rem; margin-bottom: 1rem;">Support Channels</h3>
+        
+        <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem;">
+          <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(14, 165, 233, 0.15); display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">📧</div>
+          <div>
+            <div style="font-size: 0.8rem; color: var(--text-muted);">Email Helpdesk</div>
+            <div style="font-weight: 600; color: var(--text-primary); font-size: 0.95rem;">support@apecet-forecasting.gov.in</div>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem;">
+          <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(16, 185, 129, 0.15); display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">📞</div>
+          <div>
+            <div style="font-size: 0.8rem; color: var(--text-muted);">Toll-Free Helpline</div>
+            <div style="font-weight: 600; color: var(--text-primary); font-size: 0.95rem;">1800-425-ECET (0863-2345678)</div>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 1rem; align-items: center;">
+          <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(168, 85, 247, 0.15); display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">🕒</div>
+          <div>
+            <div style="font-size: 0.8rem; color: var(--text-muted);">Counseling Hours</div>
+            <div style="font-weight: 600; color: var(--text-primary); font-size: 0.95rem;">Monday – Saturday, 9:30 AM – 5:30 PM</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FAQ Accordion -->
+      <div style="margin-top: 1.5rem;">
+        <h4 style="font-size: 1.1rem; margin-bottom: 1rem;">Frequently Asked Questions</h4>
+        
+        <div class="faq-box">
+          <div class="faq-question">
+            <span>How are cutoff ranks forecasted for 2026?</span>
+            <span class="faq-toggle-icon">▼</span>
+          </div>
+          <div class="faq-answer">
+            Our hybrid model performs weighted trend regression on verified 2023 and 2024 closing ranks while factoring in branch demand shifts and seat capacity changes.
+          </div>
+        </div>
+
+        <div class="faq-box">
+          <div class="faq-question">
+            <span>What do Safe, Moderate, and Dream labels mean?</span>
+            <span class="faq-toggle-icon">▼</span>
+          </div>
+          <div class="faq-answer">
+            <b>Safe</b> means your rank is well within previous closing marks (&gt;80% odds). <b>Moderate</b> indicates competitive contention (50-80%). <b>Ambitious</b> and <b>Dream</b> reflect reach options with closing ranks lower than your score.
+          </div>
+        </div>
+
+        <div class="faq-box">
+          <div class="faq-question">
+            <span>Can I export my option list directly for APSCHE?</span>
+            <span class="faq-toggle-icon">▼</span>
+          </div>
+          <div class="faq-answer">
+            Yes! Once logged in, you can add choices to your Preference List, arrange the order via drag-and-drop, and generate a printable PDF or CSV file.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contact Form Card -->
+    <div class="glass-panel" style="padding: 2.25rem;">
+      <h3 style="font-size: 1.3rem; margin-bottom: 0.35rem;">Send an Inquiry</h3>
+      <p style="color: var(--text-secondary); font-size: 0.88rem; margin-bottom: 1.5rem;">Receive guidance on eligibility, certificates, or counseling simulations.</p>
+
+      <form id="homeContactForm">
+        <div style="margin-bottom: 1rem;">
+          <label class="form-label" for="contactName">Full Name</label>
+          <input type="text" id="contactName" class="form-control" placeholder="Candidate or Guardian Name" required>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+          <div>
+            <label class="form-label" for="contactEmail">Email Address</label>
+            <input type="email" id="contactEmail" class="form-control" placeholder="name@example.com" required>
+          </div>
+          <div>
+            <label class="form-label" for="contactPhone">Phone Number</label>
+            <input type="tel" id="contactPhone" class="form-control" placeholder="10-digit mobile" pattern="[0-9]{10}" required>
+          </div>
+        </div>
+
+        <div style="margin-bottom: 1rem;">
+          <label class="form-label" for="contactSubject">Inquiry Category</label>
+          <select id="contactSubject" class="form-select">
+            <option value="Cutoff Prediction Query">Cutoff Prediction Query</option>
+            <option value="Preference List Assistance">Preference List Assistance</option>
+            <option value="AU / SVU Regional Quota Help">AU / SVU Regional Quota Help</option>
+            <option value="College Data Correction">College Data Correction</option>
+            <option value="Technical Support">Technical Support</option>
+          </select>
+        </div>
+
+        <div style="margin-bottom: 1.5rem;">
+          <label class="form-label" for="contactMsg">Message / Specific Question</label>
+          <textarea id="contactMsg" class="form-control" rows="4" placeholder="Detail your diploma branch, ECET rank, or inquiry here..." required></textarea>
+        </div>
+
+        <button type="submit" class="btn-primary-glass" style="width: 100%; padding: 0.85rem; font-size: 1rem;">
+          Submit Inquiry →
+        </button>
+      </form>
+
+      <div id="contactStatusMsg"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ========================================================================
+     BOTTOM CTA BANNER
+     ======================================================================== -->
+<section style="margin-bottom: 2rem;">
+  <div class="glass-panel" style="padding: 3rem 2rem; text-align: center; background: linear-gradient(135deg, rgba(14, 165, 233, 0.12) 0%, rgba(168, 85, 247, 0.12) 100%); border: 1px solid rgba(14, 165, 233, 0.3);">
+    <h2 style="font-size: 2.2rem; margin-bottom: 0.75rem;">Ready to Secure Your B.Tech Engineering Seat?</h2>
+    <p style="color: var(--text-secondary); max-width: 650px; margin: 0 auto 2rem; font-size: 1rem;">
+      Create your free candidate account now to explore all 25+ autonomous colleges, multi-year cutoff graphs, and personalized sliding round predictions.
+    </p>
+    <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
+      {% if session.get('user_id') %}
+        <a href="{{ url_for('student_dashboard') }}" class="btn-primary-glass" style="padding: 0.85rem 2rem; font-size: 1rem;">
+          <span>🏠</span> Go to Dashboard
+        </a>
+      {% else %}
+        <a href="{{ url_for('register') }}" class="btn-primary-glass" style="padding: 0.85rem 2rem; font-size: 1rem; border-radius: 9999px;">
+          <span>+</span> Register Free Account
+        </a>
+        <a href="{{ url_for('login') }}" class="btn-secondary-glass" style="padding: 0.85rem 1.75rem; font-size: 1rem;">
+          <span>➔</span> Sign In to Portal
+        </a>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}

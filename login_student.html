@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}Student Login — AP ECET Candidate Portal{% endblock %}
+
+{% block content %}
+<div style="max-width: 480px; margin: 3rem auto;">
+  
+  <div class="glass-panel" style="padding: 2.5rem 2rem;">
+    
+    <!-- Title -->
+    <div style="text-align: center; margin-bottom: 2rem;">
+      <div class="brand-icon-box" style="margin: 0 auto 1rem; width: 56px; height: 56px; font-size: 1.8rem;">🎓</div>
+      <h2 style="font-size: 1.75rem;">Student Portal Login</h2>
+      <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.35rem;">
+        Welcome Back! Sign in with your registered candidate credentials to access admission forecasting & preference lists
+      </p>
+    </div>
+
+    <!-- Login Form -->
+    <form method="POST" action="{{ url_for('login') }}">
+      
+      <!-- Email Field -->
+      <div style="margin-bottom: 1.25rem;">
+        <label class="form-label" for="loginEmail">Candidate Email Address</label>
+        <input type="email" id="loginEmail" name="email" class="form-control" placeholder="name@example.com" required autocomplete="username">
+      </div>
+
+      <!-- Password Field with Modern SVG Show/Hide Toggle -->
+      <div style="margin-bottom: 1.25rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+          <label class="form-label" for="loginPassword" style="margin-bottom:0;">Password</label>
+          <a href="{{ url_for('forgot_password') }}" style="font-size: 0.8rem;">Forgot Password?</a>
+        </div>
+        <div style="position: relative;">
+          <input type="password" id="loginPassword" name="password" class="form-control" placeholder="Enter your password" required style="padding-right: 2.8rem;" autocomplete="current-password">
+          <button type="button" class="password-toggle-btn" data-target="loginPassword" title="Toggle password visibility" aria-label="Toggle password visibility">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+              <line x1="1" y1="1" x2="23" y2="23"></line>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Session Option -->
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; font-size: 0.85rem; color: var(--text-secondary);">
+        <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer;">
+          <input type="checkbox" name="remember" style="accent-color: var(--accent-cyan);"> Keep me logged in
+        </label>
+      </div>
+
+      <!-- Submit Button -->
+      <button type="submit" class="btn-primary-glass" style="width: 100%; padding: 0.85rem; font-size: 1rem;">
+        <span>➔</span> Sign In to Candidate Portal
+      </button>
+
+    </form>
+
+    <!-- Registration Link -->
+    <div style="text-align: center; margin-top: 1.5rem; font-size: 0.875rem; color: var(--text-secondary);">
+      New AP ECET candidate? 
+      <a href="{{ url_for('register') }}" style="font-weight: 600;">Create an account</a>
+    </div>
+
+    <!-- Admin Portal Alternate Link -->
+    <div style="text-align: center; margin-top: 1.25rem; padding-top: 1.25rem; border-top: 1px solid var(--glass-border); font-size: 0.85rem;">
+      <span style="color: var(--text-muted);">Are you an Examination Officer?</span>
+      <a href="{{ url_for('admin_login') }}" style="color: var(--accent-cyan); font-weight: 600; margin-left: 0.35rem;">
+        Access Admin Portal →
+      </a>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}

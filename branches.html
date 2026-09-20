@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Branch Management — AP ECET Admin{% endblock %}
+
+{% block content %}
+<div>
+  
+  <div class="glass-panel" style="padding: 2rem 2.5rem; margin-bottom: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem;">
+      <div>
+        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.35rem;">
+          <span class="badge-safe">Master Disciplines</span>
+          <span style="color: var(--text-muted); font-size: 0.85rem;">{{ branches|length }} Branches Active</span>
+        </div>
+        <h1 style="font-size: 2rem;">Engineering Branch Master Management</h1>
+        <p style="color: var(--text-secondary); font-size: 0.95rem;">
+          Feature #22 — CRUD for engineering branches feeding prediction models and college search.
+        </p>
+      </div>
+
+      <button onclick="document.getElementById('addBranchModal').style.display='block';" class="btn-primary-glass">
+        ➕ Add New Branch
+      </button>
+    </div>
+  </div>
+
+  <div class="glass-panel" style="padding: 1.5rem;">
+    <div class="glass-table-wrapper">
+      <table class="glass-table">
+        <thead>
+          <tr>
+            <th>Branch Code</th>
+            <th>Branch Full Name</th>
+            <th>Department</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for b in branches %}
+            <tr>
+              <td><span style="background: rgba(168, 85, 247, 0.2); color: var(--accent-purple); padding: 0.2rem 0.55rem; border-radius: 4px; font-weight: 700;">{{ b.branch_code }}</span></td>
+              <td><b>{{ b.branch_name }}</b></td>
+              <td>{{ b.department or 'Engineering' }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<div id="addBranchModal" style="display:none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); z-index: 2000; align-items: center; justify-content: center;">
+  <div style="max-width: 500px; margin: 4rem auto; padding: 2rem;" class="glass-panel">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+      <h3 style="font-size: 1.25rem;">Add Engineering Branch</h3>
+      <button onclick="document.getElementById('addBranchModal').style.display='none';" style="background:none; border:none; color:white; font-size: 1.5rem; cursor:pointer;">✕</button>
+    </div>
+
+    <form method="POST" action="{{ url_for('admin_add_branch') }}">
+      <div style="margin-bottom: 1rem;">
+        <label class="form-label">Branch Code</label>
+        <input type="text" name="branch_code" class="form-control" placeholder="e.g. CSD" required>
+      </div>
+      <div style="margin-bottom: 1rem;">
+        <label class="form-label">Branch Full Name</label>
+        <input type="text" name="branch_name" class="form-control" placeholder="e.g. Computer Science and Engineering (Data Science)" required>
+      </div>
+      <div style="margin-bottom: 1.5rem;">
+        <label class="form-label">Department</label>
+        <input type="text" name="department" class="form-control" value="Engineering" required>
+      </div>
+      <div style="text-align: right;">
+        <button type="submit" class="btn-primary-glass">Save Branch Master</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

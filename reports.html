@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+{% block title %}Model Evaluation & Viva Reports — AP ECET Counselling Forecasting System{% endblock %}
+
+{% block content %}
+<div>
+  
+  <!-- Header Glass Banner -->
+  <div class="glass-panel" style="padding: 2.25rem; margin-bottom: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem;">
+      <div>
+        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.35rem;">
+          <span class="badge-safe">Viva Presentation Mode</span>
+          <span style="color: var(--text-muted); font-size: 0.85rem;">Feature #27 — Admin Reports & ML Evaluation</span>
+        </div>
+        <h1 style="font-size: 2rem;">Machine Learning Model Performance & Evaluation</h1>
+        <p style="color: var(--text-secondary); font-size: 0.95rem; max-width: 750px;">
+          Empirical validation metrics computed on real historical cutoff records. Provides measurable evidence comparing Linear Regression, Decision Tree, and Random Forest models for academic review.
+        </p>
+      </div>
+
+      <!-- Best Validated Model Badge -->
+      <div style="background: rgba(16, 185, 129, 0.15); border: 2px solid #10b981; border-radius: var(--radius-md); padding: 1rem 1.5rem; text-align: right;">
+        <div style="font-size: 0.75rem; color: var(--color-safe); font-weight: 700; letter-spacing: 0.05em;">BEST VALIDATED MODEL</div>
+        <div style="font-family: 'Outfit', sans-serif; font-size: 1.35rem; font-weight: 800; color: var(--text-primary);">
+          {{ eval_data.best_model }}
+        </div>
+        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem;">Selected automatically by lowest error</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Real Measured Evaluation Metrics Table (Feature 27) -->
+  <div class="glass-panel" style="padding: 1.75rem; margin-bottom: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+      <h3 style="font-size: 1.3rem;">📊 Empirical Validation Metrics Comparison</h3>
+      <span style="font-size: 0.8rem; color: var(--text-muted);">Evaluated on held-out validation set</span>
+    </div>
+
+    <div class="glass-table-wrapper">
+      <table class="glass-table">
+        <thead>
+          <tr>
+            <th>Model Algorithm</th>
+            <th style="text-align: center;">MAE (Closing Rank Error)</th>
+            <th style="text-align: center;">RMSE (Root Mean Squared)</th>
+            <th style="text-align: center;">R² Score (Goodness of Fit)</th>
+            <th style="text-align: center;">Accuracy %</th>
+            <th style="text-align: center;">Precision %</th>
+            <th style="text-align: center;">Recall %</th>
+            <th style="text-align: center;">F1-Score %</th>
+            <th style="text-align: center;">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for model_name, m in eval_data.metrics.items() %}
+            <tr style="{% if model_name == eval_data.best_model %}background: rgba(16, 185, 129, 0.08); font-weight: 600;{% endif %}">
+              <td>
+                <div style="font-size: 1rem; color: var(--text-primary);">
+                  {{ model_name }}
+                  {% if model_name == eval_data.best_model %}
+                    <span class="badge-safe" style="font-size: 0.7rem; margin-left: 0.4rem;">★ Selected</span>
+                  {% endif %}
+                </div>
+              </td>
+              <td style="text-align: center; color: var(--accent-cyan); font-family: monospace; font-size: 0.95rem;">
+                <b>{{ m.mae }}</b>
+              </td>
+              <td style="text-align: center; font-family: monospace; font-size: 0.95rem;">
+                {{ m.rmse }}
+              </td>
+              <td style="text-align: center; font-family: monospace; font-size: 0.95rem; color: var(--color-safe);">
+                {{ m.r2 }}
+              </td>
+              <td style="text-align: center; font-family: monospace;">{{ m.accuracy }}%</td>
+              <td style="text-align: center; font-family: monospace;">{{ m.precision }}%</td>
+              <td style="text-align: center; font-family: monospace;">{{ m.recall }}%</td>
+              <td style="text-align: center; font-family: monospace; color: var(--accent-purple); font-weight: 700;">
+                {{ m.f1_score }}%
+              </td>
+              <td style="text-align: center;">
+                {% if model_name == eval_data.best_model %}
+                  <span class="badge-safe">Deployed</span>
+                {% else %}
+                  <span style="color: var(--text-muted); font-size: 0.8rem;">Evaluated</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Charts Comparison: MAE/RMSE and Classification Scores -->
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;" class="responsive-2col">
+    
+    <!-- Chart 1: Error Comparison (MAE vs RMSE) -->
+    <div class="glass-panel" style="padding: 1.75rem;">
+      <h3 style="font-size: 1.25rem; margin-bottom: 0.25rem;">📉 Regression Error Metrics (Lower is Better)</h3>
+      <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 1.25rem;">
+        Comparing MAE (Mean Absolute Error) and RMSE (Root Mean Squared Error).
+      </p>
+
+      <div style="height: 300px; position: relative;">
+        <canvas id="errorComparisonChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Chart 2: Accuracy & F1 Comparison -->
+    <div class="glass-panel" style="padding: 1.75rem;">
+      <h3 style="font-size: 1.25rem; margin-bottom: 0.25rem;">🎯 Classification Performance (Higher is Better)</h3>
+      <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 1.25rem;">
+        Accuracy and F1-score for admission chance classification boundary.
+      </p>
+
+      <div style="height: 300px; position: relative;">
+        <canvas id="classificationChart"></canvas>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Viva Workflow Explanation Box -->
+  <div class="glass-panel" style="padding: 2rem;">
+    <h3 style="font-size: 1.3rem; margin-bottom: 0.75rem; color: var(--accent-cyan);">
+      🎓 Viva Reference & Architectural Explanation
+    </h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; color: var(--text-secondary); font-size: 0.9rem;">
+      
+      <div style="background: rgba(255, 255, 255, 0.03); padding: 1.25rem; border-radius: var(--radius-sm); border: 1px solid var(--glass-border);">
+        <h4 style="color: var(--text-primary); margin-bottom: 0.4rem;">1. Hybrid Design</h4>
+        <p>
+          Linear Regression models linear drift; Decision Trees capture multi-branch non-linear cutoff partitions; Random Forest combines 35+ ensemble estimators to eliminate overfitting and minimize variance.
+        </p>
+      </div>
+
+      <div style="background: rgba(255, 255, 255, 0.03); padding: 1.25rem; border-radius: var(--radius-sm); border: 1px solid var(--glass-border);">
+        <h4 style="color: var(--text-primary); margin-bottom: 0.4rem;">2. Recency Weighting</h4>
+        <p>
+          2024 historical cutoffs receive highest weighting (0.45), 2023 (0.25), and 2025-2026 projected cutoffs (0.30) to preserve current post-pandemic lateral entry patterns.
+        </p>
+      </div>
+
+      <div style="background: rgba(255, 255, 255, 0.03); padding: 1.25rem; border-radius: var(--radius-sm); border: 1px solid var(--glass-border);">
+        <h4 style="color: var(--text-primary); margin-bottom: 0.4rem;">3. Explainable AI</h4>
+        <p>
+          Rather than returning a purely black-box score, every forecast delivers actionable natural language justifications analyzing candidate rank margins, seat trends, and regional quotas.
+        </p>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const evalData = {{ eval_json | safe }};
+  const models = Object.keys(evalData.metrics);
+  const maeValues = models.map(m => evalData.metrics[m].mae);
+  const rmseValues = models.map(m => evalData.metrics[m].rmse);
+  const accValues = models.map(m => evalData.metrics[m].accuracy);
+  const f1Values = models.map(m => evalData.metrics[m].f1_score);
+
+  // Error Chart
+  const errCtx = document.getElementById('errorComparisonChart')?.getContext('2d');
+  if (errCtx) {
+    new Chart(errCtx, {
+      type: 'bar',
+      data: {
+        labels: models,
+        datasets: [
+          { label: 'MAE (Lower is Better)', data: maeValues, backgroundColor: 'rgba(6, 182, 212, 0.75)', borderRadius: 6 },
+          { label: 'RMSE (Lower is Better)', data: rmseValues, backgroundColor: 'rgba(239, 68, 68, 0.75)', borderRadius: 6 }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { labels: { color: '#94a3b8' } } },
+        scales: {
+          x: { ticks: { color: '#94a3b8' }, grid: { display: false } },
+          y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' }, title: { display: true, text: 'Ranks Error', color: '#94a3b8' } }
+        }
+      }
+    });
+  }
+
+  // Classification Chart
+  const clsCtx = document.getElementById('classificationChart')?.getContext('2d');
+  if (clsCtx) {
+    new Chart(clsCtx, {
+      type: 'bar',
+      data: {
+        labels: models,
+        datasets: [
+          { label: 'Accuracy %', data: accValues, backgroundColor: 'rgba(16, 185, 129, 0.75)', borderRadius: 6 },
+          { label: 'F1-Score %', data: f1Values, backgroundColor: 'rgba(168, 85, 247, 0.75)', borderRadius: 6 }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { labels: { color: '#94a3b8' } } },
+        scales: {
+          x: { ticks: { color: '#94a3b8' }, grid: { display: false } },
+          y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' }, min: 0, max: 100, title: { display: true, text: 'Percentage (%)', color: '#94a3b8' } }
+        }
+      }
+    });
+  }
+});
+</script>
+{% endblock %}
+{% endblock %}

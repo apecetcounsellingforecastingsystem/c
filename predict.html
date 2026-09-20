@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+{% block title %}Forecast Admission Chances — AP ECET Counselling Forecasting System{% endblock %}
+
+{% block content %}
+<div style="max-width: 900px; margin: 1rem auto;">
+  
+  <div class="glass-panel" style="padding: 2.5rem 2rem;">
+    
+    <!-- Header -->
+    <div style="margin-bottom: 2rem; border-bottom: 1px solid var(--glass-border); padding-bottom: 1.25rem;">
+      <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <span style="font-size: 2.2rem;">🎯</span>
+        <div>
+          <h2 style="font-size: 1.85rem;">AP ECET Admission Forecasting Engine</h2>
+          <p style="color: var(--text-secondary); font-size: 0.95rem;">
+            Enter your counselling parameters below. The hybrid engine will analyze multi-year cutoffs (2023–2026) and predict admission probabilities with explainable reasoning.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Forecasting Form -->
+    <form method="POST" action="{{ url_for('run_prediction') }}">
+      
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;" class="form-grid">
+        
+        <!-- 1. ECET Rank -->
+        <div>
+          <label class="form-label" for="student_rank">
+            AP ECET State Rank <span style="color: #ef4444;">*</span>
+          </label>
+          <input type="number" id="student_rank" name="student_rank" class="form-control" placeholder="e.g. 850" min="1" max="150000" value="{{ profile.rank or 850 }}" required>
+          <small style="color: var(--text-muted); font-size: 0.75rem;">As printed on your official AP ECET 2026 Rank Card.</small>
+        </div>
+
+        <!-- 2. Preferred Branch -->
+        <div>
+          <label class="form-label" for="branch">
+            Preferred Engineering Branch <span style="color: #ef4444;">*</span>
+          </label>
+          <select id="branch" name="branch" class="form-select" required>
+            {% for b in branches %}
+              <option value="{{ b.branch_name }}" {% if (profile.preferred_branch and b.branch_name in profile.preferred_branch) or b.branch_code == 'CSE' %}selected{% endif %}>
+                {{ b.branch_name }} ({{ b.branch_code }})
+              </option>
+            {% endfor %}
+          </select>
+          <small style="color: var(--text-muted); font-size: 0.75rem;">Lateral entry B.Tech branch.</small>
+        </div>
+
+        <!-- 3. Reservation Category -->
+        <div>
+          <label class="form-label" for="category">
+            Reservation Category <span style="color: #ef4444;">*</span>
+          </label>
+          <select id="category" name="category" class="form-select" required>
+            {% set cats = ['OC', 'OC-EWS', 'BC-A', 'BC-B', 'BC-C', 'BC-D', 'BC-E', 'SC - I', 'SC - II', 'SC - III', 'ST', 'NCC', 'PH', 'CAP'] %}
+            {% for c in cats %}
+              <option value="{{ c }}" {% if profile.category == c %}selected{% endif %}>{{ c }}</option>
+            {% endfor %}
+          </select>
+          <small style="color: var(--text-muted); font-size: 0.75rem;">Matches official cutoff category reservation quota.</small>
+        </div>
+
+        <!-- 4. Gender Quota -->
+        <div>
+          <label class="form-label" for="gender">
+            Gender Quota <span style="color: #ef4444;">*</span>
+          </label>
+          <select id="gender" name="gender" class="form-select" required>
+            <option value="BOYS" {% if profile.gender == 'BOYS' %}selected{% endif %}>Boys / General Quota</option>
+            <option value="GIRLS" {% if profile.gender == 'GIRLS' %}selected{% endif %}>Girls Quota (includes Women Reservation)</option>
+          </select>
+          <small style="color: var(--text-muted); font-size: 0.75rem;">Girls candidates are considered in both General and Girls quotas.</small>
+        </div>
+
+        <!-- 5. University Region -->
+        <div>
+          <label class="form-label" for="region">
+            Home University Region <span style="color: #ef4444;">*</span>
+          </label>
+          <select id="region" name="region" class="form-select" required>
+            <option value="AU" {% if profile.region == 'AU' %}selected{% endif %}>Andhra University (AU Region)</option>
+            <option value="SVU" {% if profile.region == 'SVU' %}selected{% endif %}>Sri Venkateswara University (SVU Region)</option>
+            <option value="ALL" {% if profile.region == 'ALL' %}selected{% endif %}>All Regions (State-wide Non-Local)</option>
+          </select>
+          <small style="color: var(--text-muted); font-size: 0.75rem;">Based on your 4 consecutive years of local diploma study.</small>
+        </div>
+
+        <!-- 6. Counselling Round -->
+        <div>
+          <label class="form-label" for="counselling_round">
+            Counselling Round <span style="color: #ef4444;">*</span>
+          </label>
+          <select id="counselling_round" name="counselling_round" class="form-select" required>
+            <option value="Phase 1" {% if profile.counselling_round == 'Phase 1' %}selected{% endif %}>Phase 1 (First Round Counselling)</option>
+            <option value="Final Phase" {% if profile.counselling_round == 'Final Phase' %}selected{% endif %}>Final Phase (Second & Mop-up Round)</option>
+          </select>
+          <small style="color: var(--text-muted); font-size: 0.75rem;">Closing ranks typically expand in Final Phase.</small>
+        </div>
+
+        <!-- 7. Preferred District Filter -->
+        <div>
+          <label class="form-label" for="district">
+            Preferred District (Optional)
+          </label>
+          <select id="district" name="district" class="form-select">
+            <option value="ALL">All Districts in Andhra Pradesh</option>
+            {% for d in districts %}
+              <option value="{{ d }}" {% if profile.district == d %}selected{% endif %}>{{ d }}</option>
+            {% endfor %}
+          </select>
+          <small style="color: var(--text-muted); font-size: 0.75rem;">Filter colleges by specific institutional district.</small>
+        </div>
+
+        <!-- 8. College Type Filter -->
+        <div>
+          <label class="form-label" for="college_type">
+            College Type (Optional)
+          </label>
+          <select id="college_type" name="college_type" class="form-select">
+            <option value="ALL">All College Types</option>
+            <option value="PVT">Private Engineering Colleges</option>
+            <option value="GOV">Government & University Colleges</option>
+          </select>
+          <small style="color: var(--text-muted); font-size: 0.75rem;">Filter by government vs private administration.</small>
+        </div>
+
+      </div>
+
+      <!-- Feature 14: Fee & Affordability Budget Filter -->
+      <div style="padding: 1.25rem; border-radius: var(--radius-sm); background: rgba(255, 255, 255, 0.03); border: 1px solid var(--glass-border); margin-bottom: 2rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+          <label class="form-label" for="budgetSlider" style="margin-bottom:0;">
+            💰 Fee & Affordability Budget Filter (Max Annual Tuition Fee)
+          </label>
+          <span id="budgetValueText" style="font-weight: 700; color: var(--accent-cyan);">₹ 75,000 / year</span>
+        </div>
+        <input type="range" id="budgetSlider" name="max_budget" min="35000" max="150000" step="5000" value="{{ profile.max_budget or 75000 }}" class="form-range" style="width:100%; accent-color: var(--accent-cyan);" oninput="updateBudgetText(this.value)">
+        <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-muted); margin-top: 0.35rem;">
+          <span>₹ 35,000 (Govt / Standard)</span>
+          <span>₹ 75,000 (Median Private)</span>
+          <span>₹ 1,50,000+ (Autonomous / Premium)</span>
+        </div>
+        <small style="color: var(--text-secondary); font-size: 0.8rem; display: block; margin-top: 0.5rem;">
+          Estimated total 3-year lateral course cost: <b id="total3YearCost" style="color: var(--text-primary);">₹ 2,25,000</b> (Tuition only). JVD fee reimbursement eligible students receive 100% tuition coverage.
+        </small>
+      </div>
+
+      <!-- Submit & Action Buttons -->
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: var(--text-secondary); cursor: pointer;">
+          <input type="checkbox" name="save_to_profile" value="1" checked style="accent-color: var(--accent-cyan);">
+          Save these parameters to my permanent profile
+        </label>
+
+        <button type="submit" class="btn-primary-glass" style="padding: 0.9rem 2.2rem; font-size: 1.05rem;">
+          🚀 Calculate Forecast & Recommend Colleges →
+        </button>
+      </div>
+
+    </form>
+
+  </div>
+
+</div>
+
+<script>
+function updateBudgetText(val) {
+  const num = parseInt(val);
+  document.getElementById('budgetValueText').innerText = `₹ ${num.toLocaleString('en-IN')} / year`;
+  document.getElementById('total3YearCost').innerText = `₹ ${(num * 3).toLocaleString('en-IN')}`;
+}
+</script>
+
+<style>
+@media (max-width: 768px) {
+  .form-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+</style>
+{% endblock %}

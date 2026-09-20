@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Seat Matrix & Fee Management — AP ECET Admin{% endblock %}
+
+{% block content %}
+<div>
+  
+  <div class="glass-panel" style="padding: 2rem 2.5rem; margin-bottom: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem;">
+      <div>
+        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.35rem;">
+          <span class="badge-safe">Intake & Fees</span>
+          <span style="color: var(--text-muted); font-size: 0.85rem;">Feature #24 — Seat Matrix</span>
+        </div>
+        <h1 style="font-size: 2rem;">College Seat Matrix & Fee Schedules</h1>
+        <p style="color: var(--text-secondary); font-size: 0.95rem;">
+          Maintain lateral entry seat intake allocations and government-regulated fee structures across 1,500+ college-branch mappings.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="glass-panel" style="padding: 1.5rem;">
+    <div class="glass-table-wrapper">
+      <table class="glass-table">
+        <thead>
+          <tr>
+            <th>College Code</th>
+            <th>Branch Code</th>
+            <th>Branch Full Name</th>
+            <th>Total Intake Seats</th>
+            <th>Annual Tuition Fee</th>
+            <th>3-Year Estimated Course Cost</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in matrix %}
+            <tr>
+              <td><span style="color: var(--accent-cyan); font-weight:700;">{{ row.college_code }}</span></td>
+              <td><b>{{ row.branch_code }}</b></td>
+              <td>{{ row.branch_name }}</td>
+              <td><span class="badge-safe">{{ row.total_intake_seats }}</span></td>
+              <td><b>₹ {{ row.fees | intcomma }}</b></td>
+              <td style="color: var(--text-muted);">₹ {{ (row.fees * 3) | intcomma }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

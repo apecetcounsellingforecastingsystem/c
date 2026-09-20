@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}User Management — AP ECET Admin{% endblock %}
+
+{% block content %}
+<div>
+  
+  <div class="glass-panel" style="padding: 2rem 2.5rem; margin-bottom: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem;">
+      <div>
+        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.35rem;">
+          <span class="badge-safe">Candidate Directory</span>
+          <span style="color: var(--text-muted); font-size: 0.85rem;">Feature #26 — User Management</span>
+        </div>
+        <h1 style="font-size: 2rem;">Candidate User Management</h1>
+        <p style="color: var(--text-secondary); font-size: 0.95rem;">
+          Search, filter, view candidate parameters, and toggle user active/inactive status.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="glass-panel" style="padding: 1.5rem;">
+    <div class="glass-table-wrapper">
+      <table class="glass-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Candidate Name</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Role</th>
+            <th>ECET Rank</th>
+            <th>Category</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for u in users %}
+            <tr>
+              <td>#{{ u.id }}</td>
+              <td><b>{{ u.username }}</b></td>
+              <td>{{ u.email }}</td>
+              <td>{{ u.phone or '-' }}</td>
+              <td><span class="badge-safe">{{ u.role|capitalize }}</span></td>
+              <td><b>{{ u.rank or 'Not set' }}</b></td>
+              <td>{{ u.category or '-' }} ({{ u.gender or '-' }})</td>
+              <td>
+                <span class="badge-{{ 'safe' if u.is_active else 'dream' }}">
+                  {{ 'Active' if u.is_active else 'Deactivated' }}
+                </span>
+              </td>
+              <td>
+                {% if u.role != 'admin' %}
+                  <form method="POST" action="{{ url_for('admin_toggle_user', user_id=u.id) }}">
+                    <button type="submit" class="btn-secondary-glass" style="padding: 0.3rem 0.6rem; font-size: 0.75rem;">
+                      {{ 'Deactivate' if u.is_active else 'Activate' }}
+                    </button>
+                  </form>
+                {% else %}
+                  <span style="color: var(--text-muted); font-size: 0.75rem;">Superadmin</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

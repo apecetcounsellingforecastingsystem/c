@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+{% block title %}Cutoff Management — AP ECET Admin{% endblock %}
+
+{% block content %}
+<div>
+  
+  <div class="glass-panel" style="padding: 2rem 2.5rem; margin-bottom: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem;">
+      <div>
+        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.35rem;">
+          <span class="badge-safe">Master Database</span>
+          <span style="color: var(--text-muted); font-size: 0.85rem;">Feature #23 — Cutoff Management</span>
+        </div>
+        <h1 style="font-size: 2rem;">Historical & Forecasted Cutoffs Database</h1>
+        <p style="color: var(--text-secondary); font-size: 0.95rem;">
+          Maintain AP ECET opening and closing ranks. The forecasting engine depends directly on these records.
+        </p>
+      </div>
+
+      <!-- Legend -->
+      <div style="display: flex; gap: 0.75rem;">
+        <span class="badge-historical">● Historical Cutoff (Green)</span>
+        <span class="badge-forecasted">● Forecasted Cutoff (Orange)</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search & Filter Form -->
+  <div class="glass-panel" style="padding: 1.5rem; margin-bottom: 2rem;">
+    <form method="GET" action="{{ url_for('admin_cutoffs') }}">
+      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr 1fr auto; gap: 1rem; align-items: flex-end;" class="responsive-grid">
+        
+        <div>
+          <label class="form-label">Year</label>
+          <select name="year" class="form-select">
+            {% for y in [2026, 2025, 2024, 2023] %}
+              <option value="{{ y }}" {% if selected_year == y %}selected{% endif %}>{{ y }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div>
+          <label class="form-label">Round</label>
+          <select name="round" class="form-select">
+            <option value="Phase 1" {% if selected_round == 'Phase 1' %}selected{% endif %}>Phase 1</option>
+            <option value="Final Phase" {% if selected_round == 'Final Phase' %}selected{% endif %}>Final Phase</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="form-label">Category</label>
+          <select name="category" class="form-select">
+            {% for c in ['OC', 'OC-EWS', 'BC-A', 'BC-B', 'BC-C', 'BC-D', 'BC-E', 'SC - I', 'SC - II', 'SC - III', 'ST', 'NCC', 'PH', 'CAP'] %}
+              <option value="{{ c }}" {% if selected_cat == c %}selected{% endif %}>{{ c }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div>
+          <label class="form-label">Gender</label>
+          <select name="gender" class="form-select">
+            <option value="BOYS" {% if selected_gender == 'BOYS' %}selected{% endif %}>BOYS</option>
+            <option value="GIRLS" {% if selected_gender == 'GIRLS' %}selected{% endif %}>GIRLS</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="form-label">College Code / Name</label>
+          <input type="text" name="q" class="form-control" placeholder="e.g. AEC or ADITYA" value="{{ query_q or '' }}">
+        </div>
+
+        <div>
+          <button type="submit" class="btn-primary-glass" style="padding: 0.75rem 1.25rem;">
+            🔍 Filter
+          </button>
+        </div>
+
+      </div>
+    </form>
+  </div>
+
+  <!-- Cutoffs Table -->
+  <div class="glass-panel" style="padding: 1.5rem;">
+    <div style="margin-bottom: 1rem; color: var(--text-secondary); font-size: 0.9rem;">
+      Displaying <b>{{ cutoffs|length }}</b> records:
+    </div>
+
+    <div class="glass-table-wrapper">
+      <table class="glass-table">
+        <thead>
+          <tr>
+            <th>Year & Round</th>
+            <th>Type</th>
+            <th>College Code</th>
+            <th>College Name</th>
+            <th>Branch</th>
+            <th>Category & Quota</th>
+            <th>Opening Rank</th>
+            <th>Closing Rank</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in cutoffs %}
+            <tr>
+              <td><b>{{ c.year }}</b> — {{ c.round }}</td>
+              <td>
+                {% if c.is_forecasted %}
+                  <span class="badge-forecasted">Forecasted</span>
+                {% else %}
+                  <span class="badge-historical">Historical</span>
+                {% endif %}
+              </td>
+              <td><span style="color: var(--accent-cyan); font-weight:700;">{{ c.college_code }}</span></td>
+              <td>{{ c.college_name }}</td>
+              <td>{{ c.branch_name }}</td>
+              <td><b>{{ c.category }}</b> ({{ c.gender }})</td>
+              <td>{{ c.opening_rank or '-' }}</td>
+              <td><b style="color: {% if c.is_forecasted %}#f59e0b{% else %}#10b981{% endif %};">{{ c.closing_rank | intcomma }}</b></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<style>
+@media (max-width: 900px) {
+  .responsive-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+</style>
+{% endblock %}

@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% block title %}{{ college.college_name }} — AP ECET College Profile{% endblock %}
+
+{% block content %}
+<div>
+  
+  <!-- Breadcrumb & Back Link -->
+  <div style="margin-bottom: 1.25rem;">
+    <a href="{{ url_for('colleges_page') }}" style="font-size: 0.85rem; color: var(--text-muted);">
+      ← Back to Colleges Directory
+    </a>
+  </div>
+
+  <!-- Header Profile Glass Banner -->
+  <div class="glass-panel" style="padding: 2.25rem; margin-bottom: 2rem;">
+    
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1.5rem;">
+      <div style="max-width: 70%;">
+        <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.5rem; flex-wrap: wrap;">
+          <span style="background: rgba(6, 182, 212, 0.2); color: var(--accent-cyan); font-weight: 800; padding: 0.25rem 0.75rem; border-radius: 6px; font-size: 1rem;">
+            {{ college.college_code }}
+          </span>
+          <span class="badge-safe">{{ college.region }} Region</span>
+          <span class="badge-moderate">{{ college.type or 'PVT' }}</span>
+          <span style="color: var(--text-muted); font-size: 0.85rem;">Est. {{ college.year_of_establishment or '2008' }}</span>
+        </div>
+
+        <h1 style="font-size: 2.1rem; margin-bottom: 0.4rem;">{{ college.college_name }}</h1>
+        
+        <p style="color: var(--text-secondary); font-size: 0.95rem;">
+          📍 {{ college.place }}, District: <b>{{ college.district }}</b> | Affiliated to <b>{{ college.affiliated_to }}</b>
+        </p>
+
+        <div style="margin-top: 0.75rem; font-size: 0.85rem; color: var(--text-muted);">
+          <span>Hostel: <b>{{ college.hostel_availability or 'Available' }}</b></span> • 
+          <span>Co-Ed: <b>{{ college.college_type or 'COED' }}</b></span> • 
+          <span>Address: {{ college.address or 'Andhra Pradesh' }}</span>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
+        <button onclick="toggleSaveCollege('{{ college.college_code }}', 'ALL', this)" class="btn-secondary-glass">
+          🤍 Save College
+        </button>
+        <a href="{{ url_for('compare_page') }}?add={{ college.college_code }}" class="btn-secondary-glass">
+          ⚖️ Add to Compare
+        </a>
+        {% if college.website %}
+          <a href="http://{{ college.website }}" target="_blank" class="btn-primary-glass">
+            🌐 Official Website ↗
+          </a>
+        {% endif %}
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Two Column Layout: Chart & Branches Table -->
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;" class="responsive-2col">
+    
+    <!-- Left: Cutoff Trend Analytics Chart (Feature 13 & Feature 5) -->
+    <div class="glass-panel" style="padding: 1.75rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <div>
+          <h3 style="font-size: 1.25rem;">📈 Multi-Year Cutoff Trend</h3>
+          <p style="color: var(--text-muted); font-size: 0.8rem;">
+            Comparing Green (Historical 2023-2024) vs Orange (Forecasted 2025-2026)
+          </p>
+        </div>
+      </div>
+
+      <div style="height: 320px; position: relative;">
+        <canvas id="collegeCutoffChart"></canvas>
+      </div>
+
+      <div style="margin-top: 1rem; display: flex; justify-content: center; gap: 1.5rem; font-size: 0.8rem;">
+        <span class="badge-historical">● Historical Cutoff (2023-2024)</span>
+        <span class="badge-forecasted">● Forecasted Cutoff (2025-2026)</span>
+      </div>
+    </div>
+
+    <!-- Right: Engineering Branches, Seats & Fees (Feature 14 & 24) -->
+    <div class="glass-panel" style="padding: 1.75rem;">
+      <h3 style="font-size: 1.25rem; margin-bottom: 0.4rem;">🏛️ Lateral Entry Branches & Fees</h3>
+      <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 1.25rem;">
+        Government approved fee structure and seat matrix for diploma lateral entry.
+      </p>
+
+      <div class="glass-table-wrapper" style="max-height: 340px; overflow-y: auto;">
+        <table class="glass-table">
+          <thead>
+            <tr>
+              <th>Branch</th>
+              <th>Seats</th>
+              <th>Annual Tuition</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for b in branches %}
+              <tr>
+                <td>
+                  <b>{{ b.branch_code }}</b>
+                  <div style="font-size: 0.75rem; color: var(--text-muted);">{{ b.branch_name }}</div>
+                </td>
+                <td><span class="badge-safe">{{ b.total_intake_seats }}</span></td>
+                <td>
+                  <b>₹ {{ b.fees | intcomma }}</b>
+                  <div style="font-size: 0.7rem; color: var(--text-muted);">3-Yr: ₹ {{ (b.fees * 3) | intcomma }}</div>
+                </td>
+                <td>
+                  <button onclick="addToPreferences('{{ college.college_code }}', '{{ college.college_name }}', '{{ b.branch_name }}', '{{ college.district }}', 'Safe', 85, 1200, {{ b.fees }})" class="btn-secondary-glass" style="padding: 0.3rem 0.6rem; font-size: 0.75rem;">
+                    ➕ Option
+                  </button>
+                </td>
+              </tr>
+            {% else %}
+              <tr>
+                <td colspan="4" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">
+                  Branch details available during web options phase.
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const chartData = {{ chart_json | safe }};
+  window.renderCutoffTrendChart('collegeCutoffChart', [2023, 2024, 2025, 2026], chartData.historical, chartData.forecasted);
+});
+</script>
+{% endblock %}
+{% endblock %}

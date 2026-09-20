@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+{% block title %}What-If Admission Simulator — AP ECET Counselling Forecasting System{% endblock %}
+
+{% block content %}
+<div>
+  
+  <!-- Header -->
+  <div class="glass-panel" style="padding: 2rem 2.5rem; margin-bottom: 2rem;">
+    <div style="display: flex; align-items: center; gap: 0.85rem;">
+      <span style="font-size: 2.5rem;">🔮</span>
+      <div>
+        <h1 style="font-size: 2rem;">What-If Counselling Simulator</h1>
+        <p style="color: var(--text-secondary); font-size: 0.95rem;">
+          Compare outcomes by altering your rank, branch, category, or round to see how your admission chances shift side by side.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Simulation Control Form -->
+  <div class="glass-panel" style="padding: 2rem; margin-bottom: 2rem;">
+    <form method="GET" action="{{ url_for('what_if_page') }}" id="whatIfForm">
+      
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;" class="responsive-2col">
+        
+        <!-- Scenario A (Baseline) -->
+        <div style="padding: 1.25rem; border-radius: var(--radius-md); background: rgba(6, 182, 212, 0.04); border: 1px solid rgba(6, 182, 212, 0.3);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h3 style="font-size: 1.15rem; color: var(--accent-cyan);">Scenario A (Current Baseline)</h3>
+            <span class="badge-safe">Option 1</span>
+          </div>
+
+          <div style="margin-bottom: 1rem;">
+            <label class="form-label">Rank A</label>
+            <input type="number" name="rank_a" class="form-control" value="{{ sim.rank_a }}" required>
+          </div>
+
+          <div style="margin-bottom: 1rem;">
+            <label class="form-label">Branch A</label>
+            <select name="branch_a" class="form-select">
+              {% for b in branches %}
+                <option value="{{ b.branch_name }}" {% if b.branch_name == sim.branch_a %}selected{% endif %}>
+                  {{ b.branch_name }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div style="margin-bottom: 1rem;">
+            <label class="form-label">Counselling Round A</label>
+            <select name="round_a" class="form-select">
+              <option value="Phase 1" {% if sim.round_a == 'Phase 1' %}selected{% endif %}>Phase 1</option>
+              <option value="Final Phase" {% if sim.round_a == 'Final Phase' %}selected{% endif %}>Final Phase</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Scenario B (Hypothetical Experiment) -->
+        <div style="padding: 1.25rem; border-radius: var(--radius-md); background: rgba(168, 85, 247, 0.04); border: 1px solid rgba(168, 85, 247, 0.3);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h3 style="font-size: 1.15rem; color: var(--accent-purple);">Scenario B (What-If Alternative)</h3>
+            <span class="badge-moderate">Option 2</span>
+          </div>
+
+          <div style="margin-bottom: 1rem;">
+            <label class="form-label">What-If Rank B</label>
+            <input type="number" name="rank_b" class="form-control" value="{{ sim.rank_b }}" required>
+          </div>
+
+          <div style="margin-bottom: 1rem;">
+            <label class="form-label">What-If Branch B</label>
+            <select name="branch_b" class="form-select">
+              {% for b in branches %}
+                <option value="{{ b.branch_name }}" {% if b.branch_name == sim.branch_b %}selected{% endif %}>
+                  {{ b.branch_name }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div style="margin-bottom: 1rem;">
+            <label class="form-label">What-If Counselling Round B</label>
+            <select name="round_b" class="form-select">
+              <option value="Phase 1" {% if sim.round_b == 'Phase 1' %}selected{% endif %}>Phase 1</option>
+              <option value="Final Phase" {% if sim.round_b == 'Final Phase' %}selected{% endif %}>Final Phase</option>
+            </select>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Shared Category & Region -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--glass-border);" class="responsive-2col">
+        <div>
+          <label class="form-label">Reservation Category</label>
+          <select name="category" class="form-select">
+            {% for c in ['OC', 'OC-EWS', 'BC-A', 'BC-B', 'BC-C', 'BC-D', 'BC-E', 'SC - I', 'SC - II', 'SC - III', 'ST', 'NCC', 'PH', 'CAP'] %}
+              <option value="{{ c }}" {% if sim.category == c %}selected{% endif %}>{{ c }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="form-label">Gender</label>
+          <select name="gender" class="form-select">
+            <option value="BOYS" {% if sim.gender == 'BOYS' %}selected{% endif %}>Boys / General Quota</option>
+            <option value="GIRLS" {% if sim.gender == 'GIRLS' %}selected{% endif %}>Girls Quota</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="text-align: center; margin-top: 2rem;">
+        <button type="submit" class="btn-primary-glass" style="padding: 0.85rem 2.5rem; font-size: 1.05rem;">
+          ⚡ Simulate & Compare Side-by-Side →
+        </button>
+      </div>
+
+    </form>
+  </div>
+
+  <!-- Comparative Results Display -->
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;" class="responsive-2col">
+    
+    <!-- Scenario A Column -->
+    <div>
+      <div class="glass-panel" style="padding: 1.5rem; margin-bottom: 1.5rem; border-top: 4px solid var(--accent-cyan);">
+        <h3 style="font-size: 1.25rem; color: var(--accent-cyan); margin-bottom: 0.25rem;">Scenario A Outcomes</h3>
+        <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 1rem;">
+          Rank {{ sim.rank_a | intcomma }} • {{ sim.branch_a }} • {{ sim.round_a }}
+        </p>
+
+        <div style="display: flex; gap: 0.75rem; margin-bottom: 1.25rem;">
+          <span class="badge-safe">Safe: {{ res_a | selectattr("classification", "equalto", "Safe") | list | length }}</span>
+          <span class="badge-moderate">Mod: {{ res_a | selectattr("classification", "equalto", "Moderate") | list | length }}</span>
+          <span class="badge-ambitious">Amb: {{ res_a | selectattr("classification", "equalto", "Ambitious") | list | length }}</span>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+          {% for r in res_a[:6] %}
+            <div style="padding: 0.85rem; border-radius: var(--radius-sm); background: var(--glass-card); border: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <div style="font-weight: 600; font-size: 0.9rem;">{{ r.college_code }} — {{ r.college_name[:28] }}</div>
+                <div style="font-size: 0.75rem; color: var(--text-muted);">Cutoff: {{ r.expected_cutoff | intcomma }} | ₹ {{ r.annual_fee | intcomma }}</div>
+              </div>
+              <span class="badge-{{ r.classification|lower }}">{{ r.admission_probability }}%</span>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Scenario B Column -->
+    <div>
+      <div class="glass-panel" style="padding: 1.5rem; margin-bottom: 1.5rem; border-top: 4px solid var(--accent-purple);">
+        <h3 style="font-size: 1.25rem; color: var(--accent-purple); margin-bottom: 0.25rem;">Scenario B Outcomes</h3>
+        <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 1rem;">
+          Rank {{ sim.rank_b | intcomma }} • {{ sim.branch_b }} • {{ sim.round_b }}
+        </p>
+
+        <div style="display: flex; gap: 0.75rem; margin-bottom: 1.25rem;">
+          <span class="badge-safe">Safe: {{ res_b | selectattr("classification", "equalto", "Safe") | list | length }}</span>
+          <span class="badge-moderate">Mod: {{ res_b | selectattr("classification", "equalto", "Moderate") | list | length }}</span>
+          <span class="badge-ambitious">Amb: {{ res_b | selectattr("classification", "equalto", "Ambitious") | list | length }}</span>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+          {% for r in res_b[:6] %}
+            <div style="padding: 0.85rem; border-radius: var(--radius-sm); background: var(--glass-card); border: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <div style="font-weight: 600; font-size: 0.9rem;">{{ r.college_code }} — {{ r.college_name[:28] }}</div>
+                <div style="font-size: 0.75rem; color: var(--text-muted);">Cutoff: {{ r.expected_cutoff | intcomma }} | ₹ {{ r.annual_fee | intcomma }}</div>
+              </div>
+              <span class="badge-{{ r.classification|lower }}">{{ r.admission_probability }}%</span>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}

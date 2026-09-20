@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Prediction History — AP ECET Counselling Forecasting System{% endblock %}
+
+{% block content %}
+<div>
+  
+  <div class="glass-panel" style="padding: 2rem 2.5rem; margin-bottom: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem;">
+      <div>
+        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.35rem;">
+          <span class="badge-safe">My Past Runs</span>
+          <span style="color: var(--text-muted); font-size: 0.85rem;">{{ history|length }} Past Predictions</span>
+        </div>
+        <h1 style="font-size: 2rem;">Prediction Run History</h1>
+        <p style="color: var(--text-secondary); font-size: 0.95rem;">
+          Review and reopen previous admission forecasts run under your candidate profile.
+        </p>
+      </div>
+
+      <a href="{{ url_for('predict_page') }}" class="btn-primary-glass">
+        🎯 Run New Forecast
+      </a>
+    </div>
+  </div>
+
+  <div class="glass-panel" style="padding: 1.5rem;">
+    {% if history %}
+      <div class="glass-table-wrapper">
+        <table class="glass-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Rank</th>
+              <th>Branch</th>
+              <th>Category</th>
+              <th>Round</th>
+              <th>Top Recommendation</th>
+              <th>Max Probability</th>
+              <th>Classification</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for h in history %}
+              <tr>
+                <td style="color: var(--text-muted); font-size: 0.8rem;">{{ h.created_at[:16] }}</td>
+                <td><b>{{ h.student_rank | intcomma }}</b></td>
+                <td>{{ h.branch }}</td>
+                <td>{{ h.category }} ({{ h.gender }})</td>
+                <td>{{ h.counselling_round }}</td>
+                <td><b>{{ h.top_college_name or 'N/A' }}</b></td>
+                <td><b style="color: var(--color-safe);">{{ h.top_probability or 85 }}%</b></td>
+                <td>
+                  <span class="badge-{{ h.top_classification|lower if h.top_classification else 'safe' }}">
+                    {{ h.top_classification or 'Safe' }}
+                  </span>
+                </td>
+                <td>
+                  <a href="{{ url_for('view_prediction_results', pred_id=h.id) }}" class="btn-primary-glass" style="padding: 0.35rem 0.75rem; font-size: 0.8rem;">
+                    Reopen ↗
+                  </a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
+        <span style="font-size: 3rem; display: block; margin-bottom: 1rem;">🕒</span>
+        <h3>No Prediction History Recorded</h3>
+        <p style="max-width: 500px; margin: 0.5rem auto 1.5rem;">
+          Run an admission forecast to automatically store and track your results here.
+        </p>
+        <a href="{{ url_for('predict_page') }}" class="btn-primary-glass">Run First Forecast</a>
+      </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

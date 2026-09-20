@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block title %}Smart Preference List Generator — AP ECET Counselling Forecasting System{% endblock %}
+
+{% block content %}
+<div>
+  
+  <!-- Header Glass Banner -->
+  <div class="glass-panel" style="padding: 2rem 2.5rem; margin-bottom: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem;">
+      <div>
+        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.35rem;">
+          <span class="badge-safe">Web Options Planner</span>
+          <span style="color: var(--text-muted); font-size: 0.85rem;">AP ECET 2026</span>
+        </div>
+        <h1 style="font-size: 2rem;">Smart Preference List Generator</h1>
+        <p style="color: var(--text-secondary); font-size: 0.95rem; max-width: 650px;">
+          Reorder and curate your prioritized web options. Rearrange choices using the Move Up/Down controls, then download as an official PDF for counselling entry.
+        </p>
+      </div>
+
+      <!-- Export Actions (Feature 28) -->
+      <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+        <a href="{{ url_for('export_preference_pdf') }}" class="btn-primary-glass" target="_blank">
+          📄 Download PDF Preference Sheet
+        </a>
+        <a href="{{ url_for('export_preference_csv') }}" class="btn-secondary-glass">
+          📊 Export CSV
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Preference List Container -->
+  <div class="glass-panel" style="padding: 2rem;">
+    
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; border-bottom: 1px solid var(--glass-border); padding-bottom: 1rem;">
+      <h3 style="font-size: 1.25rem;">Prioritized Choice Hierarchy ({{ preferences|length }} Options)</h3>
+      <div style="display: flex; gap: 0.5rem;">
+        <a href="{{ url_for('predict_page') }}" class="btn-secondary-glass" style="font-size: 0.85rem; padding: 0.4rem 0.85rem;">
+          ➕ Find More Colleges
+        </a>
+        {% if preferences %}
+          <form method="POST" action="{{ url_for('clear_preferences') }}" onsubmit="return confirm('Clear entire preference list?');">
+            <button type="submit" class="btn-secondary-glass" style="font-size: 0.85rem; padding: 0.4rem 0.85rem; color: #ef4444;">
+              🗑️ Clear All
+            </button>
+          </form>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if preferences %}
+      <div id="preferenceItemsContainer">
+        {% for p in preferences %}
+          <div class="preference-item" data-id="{{ p.id }}" data-order="{{ p.preference_order }}">
+            
+            <!-- Left: Order Badge & College Details -->
+            <div style="display: flex; align-items: center; gap: 1.25rem;">
+              <div class="preference-order-badge">
+                {{ "%02d" % p.preference_order }}
+              </div>
+              
+              <div>
+                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.2rem;">
+                  <span style="background: rgba(6, 182, 212, 0.2); color: var(--accent-cyan); font-weight: 700; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.8rem;">
+                    {{ p.college_code }}
+                  </span>
+                  <span class="badge-{{ p.classification|lower if p.classification else 'safe' }}">
+                    {{ p.classification or 'Safe' }} ({{ p.probability or 85 }}%)
+                  </span>
+                  <span style="font-size: 0.8rem; color: var(--text-muted);">
+                    District: <b>{{ p.district }}</b>
+                  </span>
+                </div>
+                
+                <h4 style="font-size: 1.1rem; margin-bottom: 0.2rem;">
+                  <a href="{{ url_for('college_detail', college_code=p.college_code) }}">
+                    {{ p.college_name }}
+                  </a>
+                </h4>
+                
+                <div style="font-size: 0.85rem; color: var(--text-secondary);">
+                  Branch: <b style="color: var(--text-primary);">{{ p.branch_name }}</b> | Annual Tuition: ₹ {{ p.fees | intcomma }} | Exp. Cutoff: {{ p.closing_rank | intcomma }}
+                </div>
+              </div>
+            </div>
+
+            <!-- Right: Order Controls & Remove -->
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+              
+              <button onclick="movePreference({{ p.preference_order }}, 'up')" class="theme-toggle-btn" title="Move Up" style="border-radius: 6px;">
+                ▲
+              </button>
+              
+              <button onclick="movePreference({{ p.preference_order }}, 'down')" class="theme-toggle-btn" title="Move Down" style="border-radius: 6px;">
+                ▼
+              </button>
+
+              <button onclick="removePreference({{ p.preference_order }}, {{ p.id }})" class="theme-toggle-btn" title="Remove" style="border-radius: 6px; color: #ef4444;">
+                ✕
+              </button>
+
+            </div>
+
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
+        <span style="font-size: 3rem; display: block; margin-bottom: 1rem;">📋</span>
+        <h3>Your Preference List is Currently Empty</h3>
+        <p style="max-width: 500px; margin: 0.5rem auto 1.5rem;">
+          Run an admission forecast or browse the colleges directory to add safe and moderate choices to your official web options list.
+        </p>
+        <a href="{{ url_for('predict_page') }}" class="btn-primary-glass">
+          🎯 Run Admission Forecast Now
+        </a>
+      </div>
+    {% endif %}
+
+  </div>
+
+</div>
+{% endblock %}

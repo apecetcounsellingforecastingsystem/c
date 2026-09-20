@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block title %}College Management — AP ECET Admin{% endblock %}
+
+{% block content %}
+<div>
+  
+  <!-- Header Glass Banner -->
+  <div class="glass-panel" style="padding: 2rem 2.5rem; margin-bottom: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem;">
+      <div>
+        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.35rem;">
+          <span class="badge-safe">Master Colleges Data</span>
+          <span style="color: var(--text-muted); font-size: 0.85rem;">{{ colleges|length }} Institutes</span>
+        </div>
+        <h1 style="font-size: 2rem;">College Master Management</h1>
+        <p style="color: var(--text-secondary); font-size: 0.95rem;">
+          CRUD operations for institutional master records, affiliations, and contact details.
+        </p>
+      </div>
+
+      <button onclick="document.getElementById('addCollegeModal').style.display='block';" class="btn-primary-glass">
+        ➕ Add New College
+      </button>
+    </div>
+  </div>
+
+  <!-- Colleges Table -->
+  <div class="glass-panel" style="padding: 1.5rem;">
+    <div class="glass-table-wrapper">
+      <table class="glass-table">
+        <thead>
+          <tr>
+            <th>Code</th>
+            <th>Name</th>
+            <th>District</th>
+            <th>Region</th>
+            <th>Type</th>
+            <th>Website</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in colleges %}
+            <tr>
+              <td><b>{{ c.college_code }}</b></td>
+              <td>{{ c.college_name }}</td>
+              <td>{{ c.district }}</td>
+              <td><span class="badge-safe">{{ c.region }}</span></td>
+              <td>{{ c.type }}</td>
+              <td>
+                {% if c.website %}
+                  <a href="http://{{ c.website }}" target="_blank" style="font-size: 0.8rem;">Link ↗</a>
+                {% else %}
+                  -
+                {% endif %}
+              </td>
+              <td>
+                <span class="badge-{{ 'safe' if c.is_active else 'dream' }}">
+                  {{ 'Active' if c.is_active else 'Inactive' }}
+                </span>
+              </td>
+              <td>
+                <div style="display: flex; gap: 0.4rem;">
+                  <form method="POST" action="{{ url_for('admin_toggle_college', college_code=c.college_code) }}">
+                    <button type="submit" class="btn-secondary-glass" style="padding: 0.3rem 0.6rem; font-size: 0.75rem;">
+                      {{ 'Deactivate' if c.is_active else 'Activate' }}
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- Simple Add College Modal -->
+<div id="addCollegeModal" style="display:none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); z-index: 2000; align-items: center; justify-content: center;">
+  <div style="max-width: 500px; margin: 4rem auto; padding: 2rem;" class="glass-panel">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+      <h3 style="font-size: 1.25rem;">Add New College</h3>
+      <button onclick="document.getElementById('addCollegeModal').style.display='none';" style="background:none; border:none; color:white; font-size: 1.5rem; cursor:pointer;">✕</button>
+    </div>
+
+    <form method="POST" action="{{ url_for('admin_add_college') }}">
+      <div style="margin-bottom: 1rem;">
+        <label class="form-label">College Code</label>
+        <input type="text" name="college_code" class="form-control" placeholder="e.g. ABCK" required>
+      </div>
+      <div style="margin-bottom: 1rem;">
+        <label class="form-label">College Name</label>
+        <input type="text" name="college_name" class="form-control" placeholder="e.g. ABC Institute of Tech" required>
+      </div>
+      <div style="margin-bottom: 1rem;">
+        <label class="form-label">District</label>
+        <input type="text" name="district" class="form-control" placeholder="e.g. VSP" required>
+      </div>
+      <div style="margin-bottom: 1.5rem;">
+        <label class="form-label">Region</label>
+        <select name="region" class="form-select">
+          <option value="AU">AU</option>
+          <option value="SVU">SVU</option>
+        </select>
+      </div>
+      <div style="text-align: right;">
+        <button type="submit" class="btn-primary-glass">Save College Record</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Counselling Calendar — AP ECET Counselling Forecasting System{% endblock %}
+
+{% block content %}
+<div>
+  
+  <div class="glass-panel" style="padding: 2rem 2.5rem; margin-bottom: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem;">
+      <div>
+        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.35rem;">
+          <span class="badge-safe">Official Timeline</span>
+          <span style="color: var(--text-muted); font-size: 0.85rem;">APSCHE Verified</span>
+        </div>
+        <h1 style="font-size: 2rem;">AP ECET 2026 Counselling Calendar</h1>
+        <p style="color: var(--text-secondary); font-size: 0.95rem;">
+          Official chronological roadmap for diploma lateral entry admissions.
+        </p>
+      </div>
+
+      <a href="{{ url_for('predict_page') }}" class="btn-primary-glass">
+        🎯 Prepare Web Options Now
+      </a>
+    </div>
+  </div>
+
+  <!-- Timeline Cards -->
+  <div class="glass-panel" style="padding: 2.5rem 2rem;">
+    
+    <div style="position: relative; padding-left: 2.5rem; border-left: 2px dashed var(--glass-border); margin-left: 1.5rem;">
+      
+      {% for item in calendar_items %}
+        <div style="position: relative; margin-bottom: 2.5rem;">
+          
+          <!-- Marker Circle -->
+          <div style="position: absolute; left: -3.35rem; top: 0; width: 28px; height: 28px; border-radius: 50%; background: {% if item.status == 'completed' %}#10b981{% elif item.status == 'ongoing' %}#06b6d4{% else %}#64748b{% endif %}; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.75rem; font-weight: bold; border: 3px solid var(--bg-base); box-shadow: 0 0 10px rgba(6, 182, 212, 0.4);">
+            {% if item.status == 'completed' %}✓{% elif item.status == 'ongoing' %}●{% else %}{{ loop.index }}{% endif %}
+          </div>
+
+          <!-- Card Content -->
+          <div style="padding: 1.25rem 1.5rem; border-radius: var(--radius-md); background: var(--glass-card); border: 1px solid var(--glass-border);">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.4rem;">
+              <h3 style="font-size: 1.2rem;">Stage {{ item.stage_order }}: {{ item.stage_name }}</h3>
+              <span class="badge-{{ 'safe' if item.status == 'completed' else ('moderate' if item.status == 'ongoing' else 'ambitious') }}">
+                {{ item.status|capitalize }}
+              </span>
+            </div>
+
+            <div style="font-size: 0.85rem; color: var(--accent-cyan); font-weight: 600; margin-bottom: 0.5rem;">
+              🗓️ {{ item.start_date }} {% if item.end_date != item.start_date %}to {{ item.end_date }}{% endif %}
+            </div>
+
+            <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 0;">
+              {{ item.description }}
+            </p>
+          </div>
+
+        </div>
+      {% endfor %}
+
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}

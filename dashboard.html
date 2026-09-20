@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard — AP ECET Counselling Forecasting System{% endblock %}
+
+{% block content %}
+<div>
+  
+  <!-- Header Glass Banner -->
+  <div class="glass-panel" style="padding: 2rem 2.5rem; margin-bottom: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem;">
+      <div>
+        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.35rem;">
+          <span class="badge-safe">Master Administration Portal</span>
+          <span style="color: var(--text-muted); font-size: 0.85rem;">System Overview</span>
+        </div>
+        <h1 style="font-size: 2rem;">AP ECET Central Back-Office</h1>
+        <p style="color: var(--text-secondary); font-size: 0.95rem;">
+          Real-time control center for colleges, cutoffs, seat matrices, machine learning model evaluation, and candidates.
+        </p>
+      </div>
+
+      <!-- Quick Action CTAs -->
+      <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+        <a href="{{ url_for('admin_reports') }}" class="btn-primary-glass">
+          ⭐ Model Evaluation (Viva Report)
+        </a>
+        <a href="{{ url_for('admin_upload_csv') }}" class="btn-secondary-glass">
+          📤 Bulk CSV Upload
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Metric Statistics Cards Row -->
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem; margin-bottom: 2rem;">
+    
+    <div class="stat-card">
+      <div>
+        <div class="stat-label">Total Colleges</div>
+        <div class="stat-val" style="color: var(--accent-cyan);">{{ stats.colleges_count }}</div>
+        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem;">Recognized institutes</div>
+      </div>
+      <div style="font-size: 2.2rem; opacity: 0.8;">🏫</div>
+    </div>
+
+    <div class="stat-card">
+      <div>
+        <div class="stat-label">Engineering Branches</div>
+        <div class="stat-val" style="color: var(--accent-purple);">{{ stats.branches_count }}</div>
+        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem;">Master disciplines</div>
+      </div>
+      <div style="font-size: 2.2rem; opacity: 0.8;">⚙️</div>
+    </div>
+
+    <div class="stat-card">
+      <div>
+        <div class="stat-label">Cutoff Records Ingested</div>
+        <div class="stat-val" style="color: var(--color-safe);">{{ stats.cutoffs_count | intcomma }}</div>
+        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem;">Years 2023–2026</div>
+      </div>
+      <div style="font-size: 2.2rem; opacity: 0.8;">📈</div>
+    </div>
+
+    <div class="stat-card">
+      <div>
+        <div class="stat-label">Registered Candidates</div>
+        <div class="stat-val" style="color: #f59e0b;">{{ stats.users_count }}</div>
+        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem;">Active student accounts</div>
+      </div>
+      <div style="font-size: 2.2rem; opacity: 0.8;">👥</div>
+    </div>
+
+    <div class="stat-card">
+      <div>
+        <div class="stat-label">Forecast Runs Executed</div>
+        <div class="stat-val" style="color: #ec4899;">{{ stats.predictions_count }}</div>
+        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem;">Total recommendations</div>
+      </div>
+      <div style="font-size: 2.2rem; opacity: 0.8;">🎯</div>
+    </div>
+
+  </div>
+
+  <!-- Admin Navigation Cards -->
+  <h3 style="font-size: 1.35rem; margin-bottom: 1.25rem;">🛠️ Master Management Modules</h3>
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+    
+    <a href="{{ url_for('admin_colleges') }}" class="glass-card" style="text-decoration:none;">
+      <div style="font-size: 2.2rem; margin-bottom: 0.5rem;">🏫</div>
+      <h4 style="font-size: 1.15rem; margin-bottom: 0.35rem;">College Management</h4>
+      <p style="color: var(--text-secondary); font-size: 0.85rem;">Add, edit, or toggle status of accredited colleges, locations, affiliation, and websites.</p>
+    </a>
+
+    <a href="{{ url_for('admin_cutoffs') }}" class="glass-card" style="text-decoration:none;">
+      <div style="font-size: 2.2rem; margin-bottom: 0.5rem;">📊</div>
+      <h4 style="font-size: 1.15rem; margin-bottom: 0.35rem;">Cutoff Management ⭐</h4>
+      <p style="color: var(--text-secondary); font-size: 0.85rem;">Manage historical and expected opening/closing ranks across all categories and rounds.</p>
+    </a>
+
+    <a href="{{ url_for('admin_upload_csv') }}" class="glass-card" style="text-decoration:none;">
+      <div style="font-size: 2.2rem; margin-bottom: 0.5rem;">📤</div>
+      <h4 style="font-size: 1.15rem; margin-bottom: 0.35rem;">CSV Data Upload & Validation ⭐</h4>
+      <p style="color: var(--text-secondary); font-size: 0.85rem;">Bulk import datasets with missing data checks, duplicate prevention, and validation reporting.</p>
+    </a>
+
+    <a href="{{ url_for('admin_reports') }}" class="glass-card" style="text-decoration:none;">
+      <div style="font-size: 2.2rem; margin-bottom: 0.5rem;">⭐</div>
+      <h4 style="font-size: 1.15rem; margin-bottom: 0.35rem;">Model Evaluation & Viva Reports</h4>
+      <p style="color: var(--text-secondary); font-size: 0.85rem;">Comprehensive evidence for viva reviewers: real MAE, RMSE, R², Accuracy, F1 comparison charts.</p>
+    </a>
+
+    <a href="{{ url_for('admin_users') }}" class="glass-card" style="text-decoration:none;">
+      <div style="font-size: 2.2rem; margin-bottom: 0.5rem;">👥</div>
+      <h4 style="font-size: 1.15rem; margin-bottom: 0.35rem;">Candidate User Management</h4>
+      <p style="color: var(--text-secondary); font-size: 0.85rem;">Search and monitor candidate registrations, activity logs, and account statuses.</p>
+    </a>
+
+    <a href="{{ url_for('admin_seat_matrix') }}" class="glass-card" style="text-decoration:none;">
+      <div style="font-size: 2.2rem; margin-bottom: 0.5rem;">🪑</div>
+      <h4 style="font-size: 1.15rem; margin-bottom: 0.35rem;">Seat Matrix & Branch Fees</h4>
+      <p style="color: var(--text-secondary); font-size: 0.85rem;">Maintain category-wise intake allocations and institutional fee schedules.</p>
+    </a>
+
+  </div>
+
+</div>
+{% endblock %}

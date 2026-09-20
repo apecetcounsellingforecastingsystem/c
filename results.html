@@ -1,0 +1,249 @@
+{% extends "base.html" %}
+{% block title %}Admission Forecast Results — AP ECET Counselling Forecasting System{% endblock %}
+
+{% block content %}
+<div>
+  
+  <!-- Results Summary Glass Banner -->
+  <div class="glass-panel" style="padding: 2rem; margin-bottom: 2rem;">
+    
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem; border-bottom: 1px solid var(--glass-border); padding-bottom: 1.5rem;">
+      <div>
+        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.35rem;">
+          <span class="badge-safe">Prediction Run Complete</span>
+          <span style="color: var(--text-muted); font-size: 0.85rem;">Run ID: #{{ pred_id }}</span>
+        </div>
+        <h1 style="font-size: 2rem;">Admission Forecasting Results</h1>
+        <div style="display: flex; flex-wrap: wrap; gap: 1rem; color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.4rem;">
+          <span>Rank: <b style="color: var(--text-primary);">{{ student_data.student_rank | intcomma }}</b></span>
+          <span>•</span>
+          <span>Branch: <b style="color: var(--text-primary);">{{ student_data.branch }}</b></span>
+          <span>•</span>
+          <span>Category: <b style="color: var(--text-primary);">{{ student_data.category }}</b> ({{ student_data.gender }})</span>
+          <span>•</span>
+          <span>Region: <b style="color: var(--text-primary);">{{ student_data.region }}</b></span>
+          <span>•</span>
+          <span>Round: <b style="color: var(--text-primary);">{{ student_data.counselling_round }}</b></span>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+        <a href="{{ url_for('export_prediction_pdf', pred_id=pred_id) }}" class="btn-primary-glass" style="padding: 0.65rem 1.25rem; font-size: 0.9rem;" target="_blank">
+          📄 Download Official PDF Report
+        </a>
+        <a href="{{ url_for('what_if_page') }}?rank={{ student_data.student_rank }}&branch={{ student_data.branch }}&category={{ student_data.category }}&gender={{ student_data.gender }}" class="btn-secondary-glass" style="padding: 0.65rem 1.25rem; font-size: 0.9rem;">
+          🔮 What-If Simulator
+        </a>
+        <a href="{{ url_for('preferences_page') }}" class="btn-secondary-glass" style="padding: 0.65rem 1.25rem; font-size: 0.9rem;">
+          📋 Preference List
+        </a>
+      </div>
+    </div>
+
+    <!-- Category Distribution Counters -->
+    {% set safe_cnt = recommendations | selectattr("classification", "equalto", "Safe") | list | length %}
+    {% set mod_cnt = recommendations | selectattr("classification", "equalto", "Moderate") | list | length %}
+    {% set amb_cnt = recommendations | selectattr("classification", "equalto", "Ambitious") | list | length %}
+    {% set drm_cnt = recommendations | selectattr("classification", "equalto", "Dream") | list | length %}
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-top: 1.5rem;">
+      
+      <div onclick="filterTier('ALL')" style="cursor: pointer;" class="stat-card" id="btnFilterAll">
+        <div>
+          <div class="stat-label">Total Recommended</div>
+          <div class="stat-val" style="color: var(--accent-cyan);">{{ recommendations|length }}</div>
+        </div>
+        <div style="font-size: 1.8rem;">🏫</div>
+      </div>
+
+      <div onclick="filterTier('Safe')" style="cursor: pointer;" class="stat-card" id="btnFilterSafe">
+        <div>
+          <div class="stat-label">🟢 Safe (High Chance)</div>
+          <div class="stat-val" style="color: var(--color-safe);">{{ safe_cnt }}</div>
+        </div>
+        <div style="font-size: 1.8rem;">✓</div>
+      </div>
+
+      <div onclick="filterTier('Moderate')" style="cursor: pointer;" class="stat-card" id="btnFilterModerate">
+        <div>
+          <div class="stat-label">🟡 Moderate Chance</div>
+          <div class="stat-val" style="color: var(--color-moderate);">{{ mod_cnt }}</div>
+        </div>
+        <div style="font-size: 1.8rem;">⚖️</div>
+      </div>
+
+      <div onclick="filterTier('Ambitious')" style="cursor: pointer;" class="stat-card" id="btnFilterAmbitious">
+        <div>
+          <div class="stat-label">🟠 Ambitious</div>
+          <div class="stat-val" style="color: var(--color-ambitious);">{{ amb_cnt }}</div>
+        </div>
+        <div style="font-size: 1.8rem;">🚀</div>
+      </div>
+
+      <div onclick="filterTier('Dream')" style="cursor: pointer;" class="stat-card" id="btnFilterDream">
+        <div>
+          <div class="stat-label">🔴 Dream (Competitive)</div>
+          <div class="stat-val" style="color: var(--color-dream);">{{ drm_cnt }}</div>
+        </div>
+        <div style="font-size: 1.8rem;">⭐</div>
+      </div>
+
+    </div>
+
+    <!-- Data Distinction Legend (Domain Rule) -->
+    <div style="margin-top: 1.25rem; display: flex; align-items: center; justify-content: flex-end; gap: 1.25rem; font-size: 0.8rem;">
+      <span style="color: var(--text-muted);">Data Color Legend:</span>
+      <span class="badge-historical">● Original Historical Cutoff (Green)</span>
+      <span class="badge-forecasted">● Expected/Forecasted Cutoff (Orange)</span>
+    </div>
+
+  </div>
+
+  <!-- Recommendations List -->
+  <div id="recommendationsContainer">
+    {% if recommendations %}
+      {% for rec in recommendations %}
+        <div class="glass-panel rec-card" data-tier="{{ rec.classification }}" style="padding: 1.75rem; margin-bottom: 1.5rem; transition: transform 0.2s ease;">
+          
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem;">
+            
+            <!-- Left College Information -->
+            <div style="max-width: 65%;">
+              <div style="display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; margin-bottom: 0.4rem;">
+                <span style="background: rgba(6, 182, 212, 0.2); color: var(--accent-cyan); padding: 0.2rem 0.6rem; border-radius: var(--radius-sm); font-weight: 700; font-size: 0.85rem;">
+                  {{ rec.college_code }}
+                </span>
+                <span class="badge-{{ rec.classification|lower }}">
+                  {{ rec.classification }} ({{ rec.admission_probability }}% Chance)
+                </span>
+                <span style="color: var(--text-muted); font-size: 0.8rem;">
+                  Dist: <b>{{ rec.district }}</b> | Region: <b>{{ rec.region }}</b> | Type: <b>{{ rec.college_type }}</b>
+                </span>
+              </div>
+
+              <h3 style="font-size: 1.35rem; margin-bottom: 0.25rem;">
+                <a href="{{ url_for('college_detail', college_code=rec.college_code) }}">
+                  {{ rec.college_name }}
+                </a>
+              </h3>
+              <div style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 0.75rem;">
+                📍 {{ rec.place }} — Affiliated to {{ rec.affiliated_to }} | Branch: <b style="color: var(--text-primary);">{{ rec.branch_name }}</b>
+              </div>
+
+              <!-- Explainable AI (XAI) Reasoning Bullets (Feature 6) -->
+              <div style="background: rgba(0, 0, 0, 0.2); padding: 0.75rem 1rem; border-radius: var(--radius-sm); border-left: 3px solid var(--accent-cyan); margin-bottom: 1rem;">
+                <div style="font-weight: 600; font-size: 0.8rem; color: var(--accent-cyan); margin-bottom: 0.35rem;">
+                  💡 Explainable AI Forecasting Breakdown:
+                </div>
+                <ul class="xai-reason-list" style="margin:0;">
+                  {% for reason in rec.reasons %}
+                    <li class="{% if 'above' in reason %}warn{% endif %}">{{ reason }}</li>
+                  {% endfor %}
+                </ul>
+              </div>
+
+              <!-- Multi-Year Cutoff Badges (Feature 5: Green Historical vs Orange Forecasted) -->
+              <div style="display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; font-size: 0.8rem;">
+                <span style="color: var(--text-muted);">Cutoff Trend:</span>
+                {% for yr in [2023, 2024, 2025, 2026] %}
+                  {% if yr in rec.cutoffs_by_year %}
+                    {% set yr_data = rec.cutoffs_by_year[yr] %}
+                    {% if yr_data.is_forecasted %}
+                      <span class="badge-forecasted" title="Forecasted Expected Cutoff">
+                        {{ yr }}: Closing {{ yr_data.closing | intcomma }}
+                      </span>
+                    {% else %}
+                      <span class="badge-historical" title="Original Historical Cutoff">
+                        {{ yr }}: Closing {{ yr_data.closing | intcomma }}
+                      </span>
+                    {% endif %}
+                  {% endif %}
+                {% endfor %}
+              </div>
+
+            </div>
+
+            <!-- Right Meta & Metrics Box -->
+            <div style="text-align: right; min-width: 220px; display: flex; flex-direction: column; justify-content: space-between; align-items: flex-end;">
+              
+              <!-- Probability Display -->
+              <div style="margin-bottom: 1rem;">
+                <div style="font-size: 0.85rem; color: var(--text-muted);">Admission Probability</div>
+                <div style="font-family: 'Outfit', sans-serif; font-size: 2.2rem; font-weight: 800; color: {% if rec.classification == 'Safe' %}var(--color-safe){% elif rec.classification == 'Moderate' %}var(--color-moderate){% elif rec.classification == 'Ambitious' %}var(--color-ambitious){% else %}var(--color-dream){% endif %};">
+                  {{ rec.admission_probability }}%
+                </div>
+                <div style="font-size: 0.8rem; color: var(--text-secondary);">
+                  Expected Cutoff: <b>{{ rec.expected_cutoff | intcomma }}</b>
+                </div>
+              </div>
+
+              <!-- Fee & Cost Structure -->
+              <div style="font-size: 0.85rem; margin-bottom: 1.25rem; color: var(--text-secondary);">
+                <div>Tuition: <b style="color: var(--text-primary);">₹ {{ rec.annual_fee | intcomma }} / yr</b></div>
+                <div style="font-size: 0.75rem; color: var(--text-muted);">Est. 3-Year Course: ₹ {{ rec.total_course_cost | intcomma }}</div>
+                <div style="font-size: 0.75rem; color: var(--text-muted);">Total Intake Seats: {{ rec.total_intake_seats }}</div>
+              </div>
+
+              <!-- Action Buttons -->
+              <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: flex-end;">
+                
+                <button onclick="addToPreferences('{{ rec.college_code }}', '{{ rec.college_name }}', '{{ rec.branch_name }}', '{{ rec.district }}', '{{ rec.classification }}', {{ rec.admission_probability }}, {{ rec.expected_cutoff }}, {{ rec.annual_fee }})" class="btn-primary-glass" style="padding: 0.45rem 0.85rem; font-size: 0.8rem;">
+                  ➕ Add to Options
+                </button>
+
+                <button onclick="toggleSaveCollege('{{ rec.college_code }}', '{{ rec.branch_name }}', this)" class="btn-secondary-glass" style="padding: 0.45rem 0.75rem; font-size: 0.8rem;">
+                  🤍 Save
+                </button>
+
+                <a href="{{ url_for('college_detail', college_code=rec.college_code) }}" class="btn-secondary-glass" style="padding: 0.45rem 0.75rem; font-size: 0.8rem;">
+                  Details ℹ️
+                </a>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+      {% endfor %}
+    {% else %}
+      <div class="glass-panel" style="padding: 3rem; text-align: center; color: var(--text-muted);">
+        <span style="font-size: 3rem; display: block; margin-bottom: 1rem;">🔍</span>
+        <h3>No Colleges Met the Exact Filter Criteria</h3>
+        <p style="max-width: 500px; margin: 0.5rem auto 1.5rem;">
+          Try adjusting your district or fee budget filters in the prediction form to widen the recommendation results.
+        </p>
+        <a href="{{ url_for('predict_page') }}" class="btn-primary-glass">Modify Forecasting Parameters</a>
+      </div>
+    {% endif %}
+  </div>
+
+</div>
+
+<script>
+function filterTier(tier) {
+  const cards = document.querySelectorAll('.rec-card');
+  cards.forEach(c => {
+    if (tier === 'ALL' || c.getAttribute('data-tier') === tier) {
+      c.style.display = 'block';
+    } else {
+      c.style.display = 'none';
+    }
+  });
+
+  // Highlight active filter card
+  ['All', 'Safe', 'Moderate', 'Ambitious', 'Dream'].forEach(t => {
+    const el = document.getElementById(`btnFilter${t}`);
+    if (el) {
+      if (t.toUpperCase() === tier.toUpperCase()) {
+        el.style.borderColor = 'var(--accent-cyan)';
+      } else {
+        el.style.borderColor = 'var(--glass-border)';
+      }
+    }
+  });
+}
+</script>
+{% endblock %}

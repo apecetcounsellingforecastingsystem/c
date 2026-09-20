@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% block title %}CSV Data Upload & Validation — AP ECET Admin{% endblock %}
+
+{% block content %}
+<div style="max-width: 900px; margin: 1rem auto;">
+  
+  <div class="glass-panel" style="padding: 2.5rem 2rem; margin-bottom: 2rem;">
+    <div style="display: flex; align-items: center; gap: 0.85rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--glass-border); padding-bottom: 1.25rem;">
+      <span style="font-size: 2.5rem;">📤</span>
+      <div>
+        <h1 style="font-size: 1.85rem;">CSV Data Upload & Validation Engine</h1>
+        <p style="color: var(--text-secondary); font-size: 0.95rem;">
+          Feature #25 — Batch import historical or expected cutoff datasets with automated validation, deduplication, and anomaly reporting.
+        </p>
+      </div>
+    </div>
+
+    <!-- Upload Form -->
+    <form method="POST" action="{{ url_for('admin_upload_csv') }}" enctype="multipart/form-data">
+      
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+        <div>
+          <label class="form-label">Data Academic Year</label>
+          <select name="year" class="form-select" required>
+            <option value="2026">2026 (Forecasted)</option>
+            <option value="2025">2025 (Forecasted)</option>
+            <option value="2024">2024 (Historical)</option>
+            <option value="2023">2023 (Historical)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="form-label">Counselling Round</label>
+          <select name="round" class="form-select" required>
+            <option value="Phase 1">Phase 1</option>
+            <option value="Final Phase">Final Phase</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- File Drag and Drop Zone -->
+      <div style="border: 2px dashed var(--glass-border); border-radius: var(--radius-md); padding: 2.5rem; text-align: center; margin-bottom: 1.5rem; background: rgba(255, 255, 255, 0.02); cursor: pointer;" onclick="document.getElementById('csvFileInput').click();">
+        <span style="font-size: 3rem; display: block; margin-bottom: 0.75rem;">📁</span>
+        <div style="font-weight: 600; font-size: 1.1rem; margin-bottom: 0.35rem;">Choose a CSV file to validate and import</div>
+        <p style="color: var(--text-muted); font-size: 0.85rem;">Required columns: COLLEGE CODE, BRANCH, GENDER, CATEGORY, OPENING RANK, CLOSING RANK</p>
+        <input type="file" id="csvFileInput" name="csv_file" accept=".csv" required style="display:none;" onchange="document.getElementById('fileNameDisplay').innerText = 'Selected: ' + this.files[0].name;">
+        <div id="fileNameDisplay" style="margin-top: 0.75rem; color: var(--accent-cyan); font-weight: 600; font-size: 0.9rem;"></div>
+      </div>
+
+      <div style="text-align: right;">
+        <button type="submit" class="btn-primary-glass" style="padding: 0.85rem 2rem; font-size: 1rem;">
+          ⚡ Validate & Ingest Records →
+        </button>
+      </div>
+
+    </form>
+  </div>
+
+  <!-- Upload Validation Results Summary (Feature 25 Output) -->
+  {% if upload_result %}
+    <div class="glass-panel" style="padding: 2rem; margin-bottom: 2rem; border-left: 4px solid {% if upload_result.status == 'success' %}var(--color-safe){% else %}#ef4444{% endif %};">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+        <h3 style="font-size: 1.3rem;">📋 Validation & Import Summary</h3>
+        <span class="badge-{{ 'safe' if upload_result.status == 'success' else 'dream' }}">
+          {{ upload_result.status|upper }}
+        </span>
+      </div>
+
+      <!-- Summary Counters -->
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem;">
+        <div class="stat-card">
+          <div>
+            <div class="stat-label">Total Rows</div>
+            <div class="stat-val">{{ upload_result.total_rows }}</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div>
+            <div class="stat-label">Valid Ingested</div>
+            <div class="stat-val" style="color: var(--color-safe);">{{ upload_result.valid_rows }}</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div>
+            <div class="stat-label">Duplicates Skipped</div>
+            <div class="stat-val" style="color: #f59e0b;">{{ upload_result.duplicates }}</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div>
+            <div class="stat-label">Invalid Rejected</div>
+            <div class="stat-val" style="color: #ef4444;">{{ upload_result.invalid_rows|length }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Invalid Rows Report Table -->
+      {% if upload_result.invalid_rows %}
+        <div style="margin-top: 1.5rem;">
+          <h4 style="font-size: 1rem; color: #ef4444; margin-bottom: 0.5rem;">⚠️ Rejected Invalid Rows & Diagnostic Reasons:</h4>
+          <div class="glass-table-wrapper" style="max-height: 250px; overflow-y: auto;">
+            <table class="glass-table">
+              <thead>
+                <tr>
+                  <th>Row #</th>
+                  <th>College Code</th>
+                  <th>Branch</th>
+                  <th>Category</th>
+                  <th>Closing Rank</th>
+                  <th>Validation Rejection Reason</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for err in upload_result.invalid_rows %}
+                  <tr>
+                    <td><b>{{ err.row_idx }}</b></td>
+                    <td>{{ err.college_code }}</td>
+                    <td>{{ err.branch }}</td>
+                    <td>{{ err.category }}</td>
+                    <td>{{ err.closing_rank }}</td>
+                    <td style="color: #ef4444;">{{ err.reason }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      {% endif %}
+
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}

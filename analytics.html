@@ -1,0 +1,247 @@
+{% extends "base.html" %}
+{% block title %}Cutoff Analytics & Visualizations — AP ECET Counselling Forecasting System{% endblock %}
+
+{% block content %}
+<div>
+  
+  <!-- Header Glass Banner -->
+  <div class="glass-panel" style="padding: 2rem 2.5rem; margin-bottom: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem;">
+      <div>
+        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.35rem;">
+          <span class="badge-safe">Data Intelligence</span>
+          <span style="color: var(--text-muted); font-size: 0.85rem;">Historical vs Forecasted Cutoffs</span>
+        </div>
+        <h1 style="font-size: 2rem;">Cutoff Analytics & Trend Visualizer</h1>
+        <p style="color: var(--text-secondary); font-size: 0.95rem;">
+          Interactive Chart.js visualizations analyzing AP ECET rank distributions across branches, categories, and counselling rounds.
+        </p>
+      </div>
+
+      <!-- Domain Distinction Badges -->
+      <div style="display: flex; gap: 0.75rem;">
+        <span class="badge-historical">● Historical Cutoffs (Green)</span>
+        <span class="badge-forecasted">● Forecasted Cutoffs (Orange)</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters Bar -->
+  <div class="glass-panel" style="padding: 1.5rem; margin-bottom: 2rem;">
+    <form method="GET" action="{{ url_for('analytics_page') }}">
+      <div style="display: grid; grid-template-columns: 2fr 1.5fr 1fr 1fr auto; gap: 1rem; align-items: flex-end;" class="analytics-filter-grid">
+        
+        <!-- Branch Selector -->
+        <div>
+          <label class="form-label">Engineering Branch</label>
+          <select name="branch" class="form-select">
+            {% for b in branches %}
+              <option value="{{ b.branch_name }}" {% if b.branch_name == current_branch %}selected{% endif %}>
+                {{ b.branch_name }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Category Selector -->
+        <div>
+          <label class="form-label">Reservation Category</label>
+          <select name="category" class="form-select">
+            {% for c in ['OC', 'OC-EWS', 'BC-A', 'BC-B', 'BC-C', 'BC-D', 'BC-E', 'SC - I', 'SC - II', 'SC - III', 'ST'] %}
+              <option value="{{ c }}" {% if c == current_cat %}selected{% endif %}>{{ c }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Gender -->
+        <div>
+          <label class="form-label">Gender</label>
+          <select name="gender" class="form-select">
+            <option value="BOYS" {% if current_gender == 'BOYS' %}selected{% endif %}>Boys</option>
+            <option value="GIRLS" {% if current_gender == 'GIRLS' %}selected{% endif %}>Girls</option>
+          </select>
+        </div>
+
+        <!-- Round -->
+        <div>
+          <label class="form-label">Round</label>
+          <select name="round" class="form-select">
+            <option value="Phase 1" {% if current_round == 'Phase 1' %}selected{% endif %}>Phase 1</option>
+            <option value="Final Phase" {% if current_round == 'Final Phase' %}selected{% endif %}>Final Phase</option>
+          </select>
+        </div>
+
+        <!-- Submit -->
+        <div>
+          <button type="submit" class="btn-primary-glass" style="padding: 0.75rem 1.25rem;">
+            📊 Update Charts
+          </button>
+        </div>
+
+      </div>
+    </form>
+  </div>
+
+  <!-- Charts Grid -->
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;" class="responsive-2col">
+    
+    <!-- Chart 1: Year-Wise Cutoff Progression (2023 to 2026) -->
+    <div class="glass-panel" style="padding: 1.75rem;">
+      <h3 style="font-size: 1.25rem; margin-bottom: 0.25rem;">📈 Year-Wise Cutoff Evolution (2023–2026)</h3>
+      <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 1.25rem;">
+        Green: 2023-2024 Historical closing ranks | Orange: 2025-2026 Projected closing ranks.
+      </p>
+
+      <div style="height: 320px; position: relative;">
+        <canvas id="yearlyTrendChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Chart 2: Opening vs Closing Rank Spread -->
+    <div class="glass-panel" style="padding: 1.75rem;">
+      <h3 style="font-size: 1.25rem; margin-bottom: 0.25rem;">📊 Top Colleges Opening vs Closing Rank Spread</h3>
+      <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 1.25rem;">
+        Span between highest and lowest rank admitted in top institutions.
+      </p>
+
+      <div style="height: 320px; position: relative;">
+        <canvas id="rankSpreadChart"></canvas>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Chart 3: Category Cutoff Comparison Across Quotas -->
+  <div class="glass-panel" style="padding: 1.75rem; margin-bottom: 2rem;">
+    <h3 style="font-size: 1.25rem; margin-bottom: 0.25rem;">⚖️ Reservation Quota Cutoff Thresholds</h3>
+    <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 1.25rem;">
+      Median closing rank variations across reservation categories for {{ current_branch }}.
+    </p>
+
+    <div style="height: 320px; position: relative;">
+      <canvas id="categoryComparisonChart"></canvas>
+    </div>
+  </div>
+
+</div>
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const analyticsData = {{ analytics_json | safe }};
+
+  // 1. Yearly Trend Line Chart
+  const trendCtx = document.getElementById('yearlyTrendChart')?.getContext('2d');
+  if (trendCtx) {
+    new Chart(trendCtx, {
+      type: 'line',
+      data: {
+        labels: ['2023 (Historical)', '2024 (Historical)', '2025 (Forecasted)', '2026 (Forecasted)'],
+        datasets: [
+          {
+            label: 'Original Historical Cutoff',
+            data: [analyticsData.yearly_trend[2023], analyticsData.yearly_trend[2024], null, null],
+            borderColor: '#10b981',
+            backgroundColor: 'rgba(16, 185, 129, 0.2)',
+            borderWidth: 3,
+            pointBackgroundColor: '#10b981',
+            pointRadius: 6,
+            tension: 0.2
+          },
+          {
+            label: 'Expected / Forecasted Cutoff',
+            data: [null, analyticsData.yearly_trend[2024], analyticsData.yearly_trend[2025], analyticsData.yearly_trend[2026]],
+            borderColor: '#f59e0b',
+            backgroundColor: 'rgba(245, 158, 11, 0.2)',
+            borderWidth: 3,
+            borderDash: [6, 4],
+            pointBackgroundColor: '#f59e0b',
+            pointRadius: 6,
+            tension: 0.2
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { labels: { color: '#94a3b8' } } },
+        scales: {
+          x: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94a3b8' } },
+          y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94a3b8' }, title: { display: true, text: 'Median Cutoff Rank', color: '#94a3b8' } }
+        }
+      }
+    });
+  }
+
+  // 2. Opening vs Closing Rank Spread Bar Chart
+  const spreadCtx = document.getElementById('rankSpreadChart')?.getContext('2d');
+  if (spreadCtx) {
+    new Chart(spreadCtx, {
+      type: 'bar',
+      data: {
+        labels: analyticsData.spread_colleges,
+        datasets: [
+          {
+            label: 'Opening Rank',
+            data: analyticsData.opening_ranks,
+            backgroundColor: 'rgba(6, 182, 212, 0.7)',
+            borderRadius: 6
+          },
+          {
+            label: 'Closing Rank',
+            data: analyticsData.closing_ranks,
+            backgroundColor: 'rgba(168, 85, 247, 0.7)',
+            borderRadius: 6
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { labels: { color: '#94a3b8' } } },
+        scales: {
+          x: { grid: { display: false }, ticks: { color: '#94a3b8' } },
+          y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94a3b8' }, title: { display: true, text: 'Rank', color: '#94a3b8' } }
+        }
+      }
+    });
+  }
+
+  // 3. Category Comparison Chart
+  const catCtx = document.getElementById('categoryComparisonChart')?.getContext('2d');
+  if (catCtx) {
+    new Chart(catCtx, {
+      type: 'bar',
+      data: {
+        labels: analyticsData.cat_labels,
+        datasets: [{
+          label: 'Average Closing Rank by Category',
+          data: analyticsData.cat_ranks,
+          backgroundColor: [
+            'rgba(56, 189, 248, 0.7)',
+            'rgba(14, 165, 233, 0.7)',
+            'rgba(16, 185, 129, 0.7)',
+            'rgba(245, 158, 11, 0.7)',
+            'rgba(249, 115, 22, 0.7)',
+            'rgba(239, 68, 68, 0.7)',
+            'rgba(168, 85, 247, 0.7)',
+            'rgba(236, 72, 153, 0.7)'
+          ],
+          borderRadius: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { display: false }, ticks: { color: '#94a3b8' } },
+          y: { grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { color: '#94a3b8' }, title: { display: true, text: 'Average Cutoff Rank', color: '#94a3b8' } }
+        }
+      }
+    });
+  }
+});
+</script>
+{% endblock %}
+{% endblock %}

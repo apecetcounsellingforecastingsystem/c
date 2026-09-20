@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+{% block title %}Student profile — AP ECET Counselling Forecasting System{% endblock %}
+
+{% block content %}
+<div class="profile-view-wrapper">
+  
+  <!-- Header: "Student profile" with theme toggle ☀️ on top right -->
+  <div class="profile-top-bar">
+    <h1 class="profile-heading">Student profile</h1>
+    <button type="button" id="profileThemeToggleBtn" class="profile-theme-btn" title="Toggle Theme" aria-label="Toggle Dark/Light Mode">
+      <span class="profileThemeIcon">☀️</span>
+    </button>
+  </div>
+
+  <!-- Form Card matching uploaded screenshot -->
+  <div class="profile-card-container">
+    <form method="POST" action="{{ url_for('profile_page') }}">
+      
+      <div class="profile-grid-2col">
+        
+        <!-- Left Column -->
+        <div>
+          <!-- 1. Username -->
+          <div class="profile-form-group" style="margin-bottom: 1.25rem;">
+            <label class="profile-field-label" for="profUsername">Username</label>
+            <input type="text" id="profUsername" name="username" class="profile-input-field" value="{{ user.username or '' }}" required autocomplete="username">
+          </div>
+
+          <!-- 2. ECET rank -->
+          <div class="profile-form-group" style="margin-bottom: 1.25rem;">
+            <label class="profile-field-label" for="profRank">ECET rank</label>
+            <input type="number" id="profRank" name="rank" class="profile-input-field" value="{{ profile.rank if profile.rank else '' }}" placeholder="" min="1" max="150000" required>
+          </div>
+
+          <!-- 3. Gender -->
+          <div class="profile-form-group" style="margin-bottom: 1.25rem;">
+            <label class="profile-field-label" for="profGender">Gender</label>
+            <select id="profGender" name="gender" class="profile-select-field">
+              <option value="Boys" {% if profile.gender in ['Boys', 'BOYS', ''] or not profile.gender %}selected{% endif %}>Boys</option>
+              <option value="Girls" {% if profile.gender in ['Girls', 'GIRLS'] %}selected{% endif %}>Girls</option>
+            </select>
+          </div>
+
+          <!-- 4. Diploma branch -->
+          <div class="profile-form-group" style="margin-bottom: 1.25rem;">
+            <label class="profile-field-label" for="profDiploma">Diploma branch</label>
+            <select id="profDiploma" name="diploma_branch" class="profile-select-field">
+              <option value="Computer Engineering" {% if profile.diploma_branch in ['Computer Engineering', ''] or not profile.diploma_branch %}selected{% endif %}>Computer Engineering</option>
+              <option value="Electronics & Communication" {% if profile.diploma_branch == 'Electronics & Communication' %}selected{% endif %}>Electronics & Communication</option>
+              <option value="Electrical & Electronics" {% if profile.diploma_branch == 'Electrical & Electronics' %}selected{% endif %}>Electrical & Electronics</option>
+              <option value="Mechanical" {% if profile.diploma_branch == 'Mechanical' %}selected{% endif %}>Mechanical</option>
+              <option value="Civil" {% if profile.diploma_branch == 'Civil' %}selected{% endif %}>Civil</option>
+              <option value="Information Technology" {% if profile.diploma_branch == 'Information Technology' %}selected{% endif %}>Information Technology</option>
+              <option value="Chemical Engineering" {% if profile.diploma_branch == 'Chemical Engineering' %}selected{% endif %}>Chemical Engineering</option>
+              <option value="Automobile Engineering" {% if profile.diploma_branch == 'Automobile Engineering' %}selected{% endif %}>Automobile Engineering</option>
+              <option value="Mining Engineering" {% if profile.diploma_branch == 'Mining Engineering' %}selected{% endif %}>Mining Engineering</option>
+              <option value="Pharmacy" {% if profile.diploma_branch == 'Pharmacy' %}selected{% endif %}>Pharmacy</option>
+            </select>
+          </div>
+
+          <!-- 5. Alternative branch -->
+          <div class="profile-form-group" style="margin-bottom: 1.25rem;">
+            <label class="profile-field-label" for="profAltBranch">Alternative branch</label>
+            <select id="profAltBranch" name="alternative_branch" class="profile-select-field">
+              <option value="None" {% if profile.alternative_branch in ['None', '', None] or not profile.alternative_branch %}selected{% endif %}>None</option>
+              <option value="Information Technology" {% if profile.alternative_branch == 'Information Technology' %}selected{% endif %}>Information Technology</option>
+              <option value="Data Science" {% if profile.alternative_branch == 'Data Science' %}selected{% endif %}>Data Science</option>
+              <option value="Artificial Intelligence & Machine Learning" {% if profile.alternative_branch == 'Artificial Intelligence & Machine Learning' %}selected{% endif %}>Artificial Intelligence & Machine Learning</option>
+              <option value="Computer Science & Engineering" {% if profile.alternative_branch in ['Computer Science & Engineering', 'COMPUTER SCIENCE AND ENGINEERING'] %}selected{% endif %}>Computer Science & Engineering</option>
+              <option value="Electronics & Communication Engineering" {% if profile.alternative_branch in ['Electronics & Communication Engineering', 'ELECTRONICS AND COMMUNICATION ENGINEERING'] %}selected{% endif %}>Electronics & Communication Engineering</option>
+              <option value="Electrical & Electronics Engineering" {% if profile.alternative_branch in ['Electrical & Electronics Engineering', 'ELECTRICAL AND ELECTRONICS ENGINEERING'] %}selected{% endif %}>Electrical & Electronics Engineering</option>
+              <option value="Mechanical Engineering" {% if profile.alternative_branch in ['Mechanical Engineering', 'MECHANICAL ENGINEERING'] %}selected{% endif %}>Mechanical Engineering</option>
+              <option value="Civil Engineering" {% if profile.alternative_branch in ['Civil Engineering', 'CIVIL ENGINEERING'] %}selected{% endif %}>Civil Engineering</option>
+            </select>
+          </div>
+
+          <!-- 6. College type preference -->
+          <div class="profile-form-group">
+            <label class="profile-field-label" for="profCollegeType">College type preference</label>
+            <select id="profCollegeType" name="college_type" class="profile-select-field">
+              <option value="Any" {% if profile.college_type in ['Any', 'ALL', '', None] or not profile.college_type %}selected{% endif %}>Any</option>
+              <option value="Govt / University" {% if profile.college_type == 'Govt / University' %}selected{% endif %}>Govt / University</option>
+              <option value="Autonomous" {% if profile.college_type == 'Autonomous' %}selected{% endif %}>Autonomous</option>
+              <option value="Private" {% if profile.college_type == 'Private' %}selected{% endif %}>Private</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Right Column -->
+        <div>
+          <!-- 1. Mobile -->
+          <div class="profile-form-group" style="margin-bottom: 1.25rem;">
+            <label class="profile-field-label" for="profMobile">Mobile</label>
+            <input type="tel" id="profMobile" name="phone" class="profile-input-field" value="{{ user.phone or '' }}" placeholder="" pattern="[0-9]{10}" autocomplete="tel">
+          </div>
+
+          <!-- 2. Category -->
+          <div class="profile-form-group" style="margin-bottom: 1.25rem;">
+            <label class="profile-field-label" for="profCategory">Category</label>
+            <select id="profCategory" name="category" class="profile-select-field">
+              {% for cat in ['OC', 'BC-A', 'BC-B', 'BC-C', 'BC-D', 'BC-E', 'SC', 'ST', 'EWS'] %}
+                <option value="{{ cat }}" {% if profile.category == cat or (not profile.category and cat == 'OC') %}selected{% endif %}>{{ cat }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- 3. Local area -->
+          <div class="profile-form-group" style="margin-bottom: 1.25rem;">
+            <label class="profile-field-label" for="profLocalArea">Local area</label>
+            <select id="profLocalArea" name="region" class="profile-select-field">
+              <option value="AU" {% if profile.region in ['AU', ''] or not profile.region %}selected{% endif %}>AU — Andhra University area</option>
+              <option value="SVU" {% if profile.region == 'SVU' %}selected{% endif %}>SVU — Sri Venkateswara University area</option>
+              <option value="UR" {% if profile.region in ['UR', 'ALL'] %}selected{% endif %}>UR — Statewide / Non-Local</option>
+            </select>
+          </div>
+
+          <!-- 4. Preferred B.Tech branch -->
+          <div class="profile-form-group" style="margin-bottom: 1.25rem;">
+            <label class="profile-field-label" for="profPrefBranch">Preferred B.Tech branch</label>
+            <select id="profPrefBranch" name="preferred_branch" class="profile-select-field">
+              <option value="Select" {% if profile.preferred_branch in ['Select', '', None] or not profile.preferred_branch %}selected{% endif %}>Select</option>
+              <option value="Computer Science & Engineering" {% if profile.preferred_branch in ['Computer Science & Engineering', 'COMPUTER SCIENCE AND ENGINEERING', 'CSE'] %}selected{% endif %}>Computer Science & Engineering</option>
+              <option value="Artificial Intelligence & Machine Learning" {% if profile.preferred_branch in ['Artificial Intelligence & Machine Learning', 'ARTIFICIAL INTELLIGENCE AND MACHINE LEARNING', 'CSM', 'AIM'] %}selected{% endif %}>Artificial Intelligence & Machine Learning</option>
+              <option value="Information Technology" {% if profile.preferred_branch in ['Information Technology', 'INFORMATION TECHNOLOGY', 'INF'] %}selected{% endif %}>Information Technology</option>
+              <option value="Data Science" {% if profile.preferred_branch in ['Data Science', 'DATA SCIENCE', 'CSD'] %}selected{% endif %}>Data Science</option>
+              <option value="Electronics & Communication Engineering" {% if profile.preferred_branch in ['Electronics & Communication Engineering', 'ELECTRONICS AND COMMUNICATION ENGINEERING', 'ECE'] %}selected{% endif %}>Electronics & Communication Engineering</option>
+              <option value="Electrical & Electronics Engineering" {% if profile.preferred_branch in ['Electrical & Electronics Engineering', 'ELECTRICAL AND ELECTRONICS ENGINEERING', 'EEE'] %}selected{% endif %}>Electrical & Electronics Engineering</option>
+              <option value="Mechanical Engineering" {% if profile.preferred_branch in ['Mechanical Engineering', 'MECHANICAL ENGINEERING', 'MEC'] %}selected{% endif %}>Mechanical Engineering</option>
+              <option value="Civil Engineering" {% if profile.preferred_branch in ['Civil Engineering', 'CIVIL ENGINEERING', 'CIV'] %}selected{% endif %}>Civil Engineering</option>
+            </select>
+          </div>
+
+          <!-- 5. Preferred district -->
+          <div class="profile-form-group" style="margin-bottom: 1.25rem;">
+            <label class="profile-field-label" for="profDistrict">Preferred district</label>
+            <select id="profDistrict" name="district" class="profile-select-field">
+              <option value="Any" {% if profile.district in ['Any', 'ALL', '', None] or not profile.district %}selected{% endif %}>Any</option>
+              {% for d in ['East Godavari', 'Visakhapatnam', 'Krishna', 'Guntur', 'Chittoor', 'Anantapur', 'Nellore', 'Kurnool', 'Kadapa', 'West Godavari', 'Prakasam', 'Srikakulam', 'Vizianagaram'] %}
+                <option value="{{ d }}" {% if profile.district == d %}selected{% endif %}>{{ d }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- 6. Empty Spacer for Column 2 to align with College type preference -->
+          <div class="profile-form-group"></div>
+        </div>
+
+      </div>
+
+      <!-- Action Buttons matching screenshot: Cyan Save profile button & Change password link -->
+      <div class="profile-actions-row">
+        <button type="submit" class="btn-cyan-save">Save profile</button>
+        <a href="{{ url_for('forgot_password') }}" class="link-cyan-pw">Change password</a>
+      </div>
+
+    </form>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const profileThemeBtn = document.getElementById('profileThemeToggleBtn');
+  const mainThemeBtn = document.getElementById('themeToggleBtn');
+  const profileThemeIcon = document.querySelector('.profileThemeIcon');
+
+  function syncThemeIcons() {
+    const theme = document.documentElement.getAttribute('data-theme') || 'dark';
+    if (profileThemeIcon) {
+      profileThemeIcon.textContent = theme === 'dark' ? '☀️' : '🌙';
+    }
+  }
+
+  syncThemeIcons();
+
+  if (profileThemeBtn) {
+    profileThemeBtn.addEventListener('click', () => {
+      if (mainThemeBtn) {
+        mainThemeBtn.click();
+      } else {
+        const current = document.documentElement.getAttribute('data-theme') || 'dark';
+        const next = current === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('apecet_theme', next);
+      }
+      syncThemeIcons();
+    });
+  }
+
+  // Observer to update icon on theme change
+  const observer = new MutationObserver(() => syncThemeIcons());
+  observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+});
+</script>
+{% endblock %}

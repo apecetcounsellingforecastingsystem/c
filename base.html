@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}AP ECET Counselling Forecasting System{% endblock %}</title>
+  
+  <!-- Modern Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  
+  <!-- Main Stylesheet -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {% block extra_css %}{% endblock %}
+</head>
+<body data-user-authenticated="{{ 'true' if session.get('user_id') else 'false' }}">
+
+  <!-- Navigation Bar -->
+  <header class="glass-header">
+    <div style="max-width: 1400px; margin: 0 auto; padding: 0.75rem 1.5rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem;">
+      
+      <!-- Left side: Hamburger (three straight lines) & Brand Logo -->
+      <div style="display: flex; align-items: center; gap: 0.85rem;">
+        {% if session.get('user_id') and session.get('role') != 'admin' %}
+          <!-- Three Small Straight Lines (Hamburger Button) for Student Navigation -->
+          <button type="button" class="drawer-toggle-btn" id="openDrawerBtn" title="Open Navigation Menu" aria-label="Open Navigation Menu">
+            <span class="line"></span>
+            <span class="line"></span>
+            <span class="line"></span>
+          </button>
+        {% endif %}
+
+        <!-- Brand Logo -->
+        <a href="{{ url_for('index') }}" class="navbar-brand-logo" style="text-decoration:none;">
+          <div class="brand-icon-box">🎓</div>
+          <div class="brand-text-wrapper">
+            <span class="brand-main-title">AP ECET</span>
+            <span class="brand-sub-title">COUNSELLING FORECASTER</span>
+          </div>
+        </a>
+      </div>
+
+      <!-- Desktop Nav Links -->
+      <nav style="display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap;" class="nav-container">
+        {% if session.get('user_id') %}
+          {% if session.get('role') == 'admin' %}
+            <a href="{{ url_for('index') }}" class="nav-link {% if request.path == '/' %}nav-pill-active{% endif %}">🏠 Home</a>
+            <a href="{{ url_for('admin_dashboard') }}" class="nav-link {% if request.path == '/admin' %}active{% endif %}">📊 Admin Dashboard</a>
+            <a href="{{ url_for('admin_colleges') }}" class="nav-link {% if 'colleges' in request.path %}active{% endif %}">🏫 Colleges</a>
+            <a href="{{ url_for('admin_cutoffs') }}" class="nav-link {% if 'cutoffs' in request.path %}active{% endif %}">📈 Cutoffs</a>
+            <a href="{{ url_for('admin_upload_csv') }}" class="nav-link {% if 'upload-csv' in request.path %}active{% endif %}">📤 CSV Import</a>
+            <a href="{{ url_for('admin_reports') }}" class="nav-link {% if 'reports' in request.path %}active{% endif %}">⭐ Model Evaluation (Viva)</a>
+          {% else %}
+            <!-- Authenticated Student: Navigation shifted into the sliding Left Navigation Drawer -->
+          {% endif %}
+        {% else %}
+          <!-- Unauthenticated / Guest Navigation Matching Screenshot & Prompt -->
+          <a href="{{ url_for('index') }}" class="nav-link {% if request.path == '/' %}nav-pill-active{% endif %}">🏠 Home</a>
+          <a href="{{ url_for('colleges_page') }}" class="nav-link auth-required-nav" data-feature="AP ECET Colleges Directory">🏫 Colleges</a>
+          <a href="{{ url_for('compare_page') }}" class="nav-link auth-required-nav" data-feature="College & Branch Comparator">⇆ Compare</a>
+          <a href="{{ url_for('analytics_page') }}" class="nav-link auth-required-nav" data-feature="Cutoff Analytics">📈 Cutoff Analytics</a>
+          <a href="{% if request.path == '/' %}#how-it-works{% else %}{{ url_for('index') }}#how-it-works{% endif %}" class="nav-link">💡 How It Works</a>
+          <a href="{% if request.path == '/' %}#about{% else %}{{ url_for('index') }}#about{% endif %}" class="nav-link">ℹ️ About</a>
+          <a href="{% if request.path == '/' %}#contact{% else %}{{ url_for('index') }}#contact{% endif %}" class="nav-link">📞 Contact</a>
+        {% endif %}
+      </nav>
+
+      <!-- Right Actions (Theme, Notifications, Profile) -->
+      <div style="display: flex; align-items: center; gap: 0.75rem; flex-shrink: 0;">
+        
+        <!-- Dark/Light Mode Switcher -->
+        <button id="themeToggleBtn" class="theme-toggle-btn" title="Toggle Dark/Light Mode" aria-label="Toggle Theme">
+          <span id="themeToggleIcon">☀️</span>
+        </button>
+
+        {% if session.get('user_id') %}
+          <!-- Saved Quick Link -->
+          {% if session.get('role') != 'admin' %}
+            <a href="{{ url_for('saved_colleges_page') }}" class="theme-toggle-btn" title="Saved Colleges" style="text-decoration:none;">
+              <span>❤️</span>
+            </a>
+          {% endif %}
+
+          <!-- User Badge / Profile dropdown -->
+          <div style="display: flex; align-items: center; gap: 0.6rem;">
+            <a href="{{ url_for('profile_page') if session.get('role') != 'admin' else '#' }}" style="text-decoration:none;">
+              <span class="badge-safe" style="cursor:pointer;">
+                👤 {{ session.get('username', 'User') }} ({{ session.get('role')|capitalize }})
+              </span>
+            </a>
+            <a href="{{ url_for('logout') }}" class="btn-secondary-glass" style="padding: 0.4rem 0.85rem; font-size: 0.8rem;">
+              Logout
+            </a>
+          </div>
+        {% else %}
+          <!-- Separated Logins: Student Login and Admin Login -->
+          <a href="{{ url_for('login') }}" class="btn-secondary-glass" style="padding: 0.5rem 1rem; font-size: 0.88rem; border-radius: var(--radius-sm);" title="Candidate Portal Login">
+            <span style="font-size: 0.85rem;">👤</span> Student Login
+          </a>
+          <a href="{{ url_for('admin_login') }}" class="btn-secondary-glass" style="padding: 0.5rem 0.85rem; font-size: 0.85rem; opacity: 0.85;" title="Administrator Back-Office Login">
+            <span>🛡️</span> Admin
+          </a>
+          <a href="{{ url_for('register') }}" class="btn-primary-glass" style="padding: 0.5rem 1.15rem; font-size: 0.88rem; border-radius: 9999px;">
+            <span style="font-weight: 700;">+</span> Register
+          </a>
+        {% endif %}
+
+      </div>
+
+    </div>
+  </header>
+
+  <!-- Flash Messages Banner -->
+  <div style="max-width: 1400px; margin: 1rem auto 0; padding: 0 1.5rem;">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert-glass auto-dismiss alert-{{ 'important' if category == 'danger' or category == 'warning' else 'normal' }}">
+            <span>{{ '⚠️' if category == 'danger' or category == 'warning' else 'ℹ️' }}</span>
+            <span>{{ message }}</span>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+  </div>
+
+  <!-- Main Content Body -->
+  <main style="max-width: 1400px; margin: 1.5rem auto 3rem; padding: 0 1.5rem; min-height: 75vh;">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Left Navigation Drawer for Students (Triggered by ☰ Three Straight Lines) -->
+  {% if session.get('user_id') and session.get('role') != 'admin' %}
+  <div id="drawerOverlay" class="drawer-backdrop"></div>
+  <aside id="studentSidebarDrawer" class="sidebar-drawer" aria-label="Student Navigation Drawer">
+    <div class="drawer-header">
+      <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <div class="brand-icon-box" style="width: 36px; height: 36px; font-size: 1.2rem;">🎓</div>
+        <div>
+          <div style="font-weight: 800; font-size: 1.05rem; line-height: 1;">AP ECET</div>
+          <div style="font-size: 0.7rem; color: var(--accent-cyan); font-weight: 600; text-transform: uppercase;">Candidate Portal</div>
+        </div>
+      </div>
+      <button type="button" id="closeDrawerBtn" class="drawer-close-btn" aria-label="Close Navigation">&times;</button>
+    </div>
+
+    <div style="padding: 1.25rem 1.25rem 1rem; display: flex; align-items: center; gap: 0.75rem; border-bottom: 1px solid var(--glass-border);">
+      <div style="width: 44px; height: 44px; border-radius: 50%; background: rgba(14, 165, 233, 0.15); border: 1px solid var(--accent-cyan); display: flex; align-items: center; justify-content: center; font-size: 1.35rem;">
+        👤
+      </div>
+      <div style="overflow: hidden;">
+        <div style="font-weight: 700; font-size: 0.95rem; color: var(--text-primary); text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">
+          {{ session.get('username', 'Candidate') }}
+        </div>
+        <div style="font-size: 0.75rem; color: var(--text-muted); text-overflow: ellipsis; white-space: nowrap; overflow: hidden;">
+          {{ session.get('email', '') }}
+        </div>
+      </div>
+    </div>
+
+    <nav class="drawer-menu">
+      <a href="{{ url_for('index') }}" class="drawer-nav-item {% if request.path == '/' %}active{% endif %}">
+        <span>🏠</span> Home
+      </a>
+      <a href="{{ url_for('student_dashboard') }}" class="drawer-nav-item {% if request.path == '/dashboard' %}active{% endif %}">
+        <span>📊</span> Dashboard
+      </a>
+      <a href="{{ url_for('profile_page') }}" class="drawer-nav-item {% if request.path == '/profile' %}active{% endif %}">
+        <span>👤</span> Profile
+      </a>
+      <a href="{{ url_for('predict_page') }}" class="drawer-nav-item {% if request.path == '/predict' %}active{% endif %}">
+        <span>🎯</span> Forecast Chances
+      </a>
+      <a href="{{ url_for('what_if_page') }}" class="drawer-nav-item {% if request.path == '/what-if' %}active{% endif %}">
+        <span>🔮</span> What-If Simulator
+      </a>
+      <a href="{{ url_for('preferences_page') }}" class="drawer-nav-item {% if request.path == '/preferences' %}active{% endif %}">
+        <span>📋</span> Preference List
+      </a>
+      <a href="{{ url_for('colleges_page') }}" class="drawer-nav-item {% if request.path == '/colleges' %}active{% endif %}">
+        <span>🏫</span> Colleges
+      </a>
+      <a href="{{ url_for('compare_page') }}" class="drawer-nav-item {% if request.path == '/compare' %}active{% endif %}">
+        <span>⚖️</span> Compare
+      </a>
+      <a href="{{ url_for('analytics_page') }}" class="drawer-nav-item {% if request.path == '/analytics' %}active{% endif %}">
+        <span>📉</span> Cutoff Analytics
+      </a>
+      <a href="{{ url_for('calendar_page') }}" class="drawer-nav-item {% if request.path == '/calendar' %}active{% endif %}">
+        <span>🗓️</span> Schedule
+      </a>
+    </nav>
+
+    <div class="drawer-footer">
+      <a href="{{ url_for('logout') }}" class="btn-secondary-glass" style="width: 100%; justify-content: center; padding: 0.75rem;">
+        <span>🚪</span> Logout
+      </a>
+    </div>
+  </aside>
+  {% endif %}
+
+  <!-- Global Auth Requirement Modal (For Gated Navigation & Buttons) -->
+  <div id="authRequiredModal" class="auth-modal-overlay" role="dialog" aria-modal="true">
+    <div class="auth-modal-card">
+      <button type="button" class="auth-modal-close" id="closeAuthModalBtn" aria-label="Close">&times;</button>
+      <div style="font-size: 3rem; margin-bottom: 0.75rem;">🔐</div>
+      <h3 style="font-size: 1.5rem; margin-bottom: 0.5rem;" id="authModalTitle">Sign In Required</h3>
+      <p style="color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 1.75rem; line-height: 1.5;" id="authModalDesc">
+        Please sign in or create your AP ECET candidate account to access the full colleges directory, cutoff analytics, comparison tools, and the admission forecasting engine.
+      </p>
+      
+      <div style="display: flex; flex-direction: column; gap: 0.85rem;">
+        <a href="{{ url_for('login') }}" class="btn-primary-glass" style="width: 100%; padding: 0.85rem; font-size: 1rem;">
+          <span>➔</span> Student Sign In
+        </a>
+        <a href="{{ url_for('register') }}" class="btn-secondary-glass" style="width: 100%; padding: 0.85rem; font-size: 1rem;">
+          <span>+</span> Register New Candidate
+        </a>
+        <a href="{{ url_for('admin_login') }}" style="font-size: 0.85rem; color: var(--text-muted); text-decoration: underline; margin-top: 0.5rem;">
+          Administrator Portal Sign In →
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer style="border-top: 1px solid var(--glass-border); padding: 2.5rem 1.5rem; color: var(--text-muted); font-size: 0.85rem; background: var(--glass-bg);">
+    <div style="max-width: 1400px; margin: 0 auto; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1.5rem;">
+      <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <span style="font-size: 1.8rem;">🎓</span>
+        <div>
+          <b style="color: var(--text-primary); font-size: 0.95rem;">AP ECET Counselling Forecasting System &copy; 2026</b>
+          <div style="color: var(--text-muted); font-size: 0.8rem; margin-top: 2px;">Department of Technical Education & Andhra Pradesh State Council of Higher Education (APSCHE).</div>
+        </div>
+      </div>
+      <div style="display: flex; flex-wrap: wrap; gap: 1.5rem;">
+        <span>Historical Cutoff Data: <b>2023–2024</b></span>
+        <span>Forecasted Trends: <b>2025–2026</b></span>
+        <span>Hybrid ML Models: <b>Linear, Decision Tree, Random Forest</b></span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Main Scripts -->
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>
+
+

@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% block title %}College Comparison — AP ECET Counselling Forecasting System{% endblock %}
+
+{% block content %}
+<div>
+  
+  <!-- Header Glass Banner -->
+  <div class="glass-panel" style="padding: 2rem 2.5rem; margin-bottom: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem;">
+      <div>
+        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.35rem;">
+          <span class="badge-safe">Multi-Institute Analysis</span>
+          <span style="color: var(--text-muted); font-size: 0.85rem;">Side-by-Side Evaluator</span>
+        </div>
+        <h1 style="font-size: 2rem;">College & Branch Comparator</h1>
+        <p style="color: var(--text-secondary); font-size: 0.95rem;">
+          Compare 2 to 4 colleges on cutoffs, tuition fees, lateral seats, hostel availability, and regional affiliation.
+        </p>
+      </div>
+
+      <!-- Add College Selector Form -->
+      <form method="GET" action="{{ url_for('compare_page') }}" style="display: flex; gap: 0.5rem; align-items: center;">
+        {% for c in selected_codes %}
+          <input type="hidden" name="colleges" value="{{ c }}">
+        {% endfor %}
+        <select name="add" class="form-select" style="min-width: 260px;">
+          <option value="">-- Add College to Compare --</option>
+          {% for col in all_colleges %}
+            <option value="{{ col.college_code }}">{{ col.college_code }} — {{ col.college_name[:32] }}</option>
+          {% endfor %}
+        </select>
+        <button type="submit" class="btn-primary-glass" style="padding: 0.75rem 1.25rem; white-space: nowrap;">
+          ➕ Add
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Comparison Matrix Table -->
+  {% if comparison_data %}
+    <div class="glass-panel" style="padding: 1.5rem;">
+      <div class="glass-table-wrapper">
+        <table class="glass-table">
+          <thead>
+            <tr>
+              <th style="width: 220px;">Attribute</th>
+              {% for item in comparison_data %}
+                <th style="min-width: 220px; text-align: center;">
+                  <div style="font-size: 1.1rem; color: var(--text-primary); margin-bottom: 0.2rem;">
+                    {{ item.college_name }}
+                  </div>
+                  <span style="background: rgba(6, 182, 212, 0.2); color: var(--accent-cyan); padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem;">
+                    {{ item.college_code }}
+                  </span>
+                  <div style="margin-top: 0.5rem;">
+                    <a href="{{ url_for('compare_page') }}?remove={{ item.college_code }}&{{ current_query }}" style="color: #ef4444; font-size: 0.75rem; text-decoration: none;">
+                      ✕ Remove
+                    </a>
+                  </div>
+                </th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><b>Location & District</b></td>
+              {% for item in comparison_data %}
+                <td style="text-align: center;">{{ item.place }}, <b>{{ item.district }}</b></td>
+              {% endfor %}
+            </tr>
+            <tr>
+              <td><b>University Region</b></td>
+              {% for item in comparison_data %}
+                <td style="text-align: center;"><span class="badge-safe">{{ item.region }}</span></td>
+              {% endfor %}
+            </tr>
+            <tr>
+              <td><b>Institution Type</b></td>
+              {% for item in comparison_data %}
+                <td style="text-align: center;">{{ item.type or 'PVT' }} ({{ item.college_type or 'COED' }})</td>
+              {% endfor %}
+            </tr>
+            <tr>
+              <td><b>Affiliation</b></td>
+              {% for item in comparison_data %}
+                <td style="text-align: center;">{{ item.affiliated_to }}</td>
+              {% endfor %}
+            </tr>
+            <tr>
+              <td><b>Year of Establishment</b></td>
+              {% for item in comparison_data %}
+                <td style="text-align: center;">{{ item.year_of_establishment or 'N/A' }}</td>
+              {% endfor %}
+            </tr>
+            <tr>
+              <td><b>Average Annual Tuition</b></td>
+              {% for item in comparison_data %}
+                <td style="text-align: center; font-weight: 700; color: var(--accent-cyan);">
+                  ₹ {{ item.avg_fees | intcomma }} / yr
+                  <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: normal;">3-Yr: ₹ {{ (item.avg_fees * 3) | intcomma }}</div>
+                </td>
+              {% endfor %}
+            </tr>
+            <tr>
+              <td><b>Hostel Availability</b></td>
+              {% for item in comparison_data %}
+                <td style="text-align: center;">{{ item.hostel_availability or 'Available' }}</td>
+              {% endfor %}
+            </tr>
+            <tr>
+              <td><b>Average Closing Cutoff</b></td>
+              {% for item in comparison_data %}
+                <td style="text-align: center; font-weight: 700;">{{ item.avg_cutoff | intcomma }}</td>
+              {% endfor %}
+            </tr>
+            <tr>
+              <td><b>Official Website</b></td>
+              {% for item in comparison_data %}
+                <td style="text-align: center;">
+                  {% if item.website %}
+                    <a href="http://{{ item.website }}" target="_blank" style="font-size: 0.85rem;">Visit ↗</a>
+                  {% else %}
+                    N/A
+                  {% endif %}
+                </td>
+              {% endfor %}
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  {% else %}
+    <div class="glass-panel" style="padding: 3rem; text-align: center; color: var(--text-muted);">
+      <span style="font-size: 3rem; display: block; margin-bottom: 1rem;">⚖️</span>
+      <h3>Select Colleges to Begin Comparison</h3>
+      <p style="max-width: 500px; margin: 0.5rem auto 1.5rem;">
+        Add 2 or more institutions using the dropdown above to view an aligned side-by-side comparison.
+      </p>
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}

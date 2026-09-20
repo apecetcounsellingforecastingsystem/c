@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+{% block title %}Register — AP ECET Counselling Forecasting System{% endblock %}
+
+{% block content %}
+<div style="max-width: 560px; margin: 2rem auto;">
+  
+  <div class="glass-panel" style="padding: 2.5rem 2rem;">
+    
+    <!-- Title -->
+    <div style="text-align: center; margin-bottom: 2rem;">
+      <span style="font-size: 3rem;">📝</span>
+      <h2 style="font-size: 1.75rem; margin-top: 0.5rem;">Candidate Registration</h2>
+      <p style="color: var(--text-secondary); font-size: 0.9rem;">Register with verified email and phone to begin forecasting</p>
+    </div>
+
+    <!-- Registration Form -->
+    <form method="POST" action="{{ url_for('register') }}" id="registerForm" onsubmit="return validateRegisterForm();">
+      
+      <!-- 1. Username -->
+      <div style="margin-bottom: 1.25rem;">
+        <label class="form-label" for="regUsername">Full Name / Username <span style="color: #ef4444;">*</span></label>
+        <input type="text" id="regUsername" name="username" class="form-control" placeholder="e.g. Somanath Rao" required minlength="3">
+      </div>
+
+      <!-- 2. Email Address with "Verify" Button -->
+      <div style="margin-bottom: 1.25rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+          <label class="form-label" for="regEmail" style="margin-bottom:0;">
+            Email Address <span style="color: #ef4444;">*</span>
+            <span id="emailVerifiedBadge" class="badge-safe" style="display:none; font-size:0.7rem; padding:0.15rem 0.5rem; margin-left:0.5rem;">Verified ✓</span>
+          </label>
+          <div id="emailOtpStatus" style="font-size: 0.8rem;"></div>
+        </div>
+        <div style="display: flex; gap: 0.5rem;">
+          <input type="email" id="regEmail" name="email" class="form-control" placeholder="name@example.com" required>
+          <button type="button" id="btnSendEmailOtp" onclick="sendOtp('email')" class="btn-primary-glass" style="white-space: nowrap; padding: 0.6rem 1rem; font-size: 0.85rem;">
+            Verify Email ✉️
+          </button>
+        </div>
+      </div>
+
+      <!-- 3. Phone Number with "Verify" Button -->
+      <div style="margin-bottom: 1.25rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+          <label class="form-label" for="regPhone" style="margin-bottom:0;">
+            Phone Number <span style="color: #ef4444;">*</span>
+            <span id="phoneVerifiedBadge" class="badge-safe" style="display:none; font-size:0.7rem; padding:0.15rem 0.5rem; margin-left:0.5rem;">Verified ✓</span>
+          </label>
+          <div id="phoneOtpStatus" style="font-size: 0.8rem;"></div>
+        </div>
+        <div style="display: flex; gap: 0.5rem;">
+          <input type="tel" id="regPhone" name="phone" class="form-control" placeholder="10-digit mobile number" pattern="[0-9]{10}" required>
+          <button type="button" id="btnSendPhoneOtp" onclick="sendOtp('phone')" class="btn-primary-glass" style="white-space: nowrap; padding: 0.6rem 1rem; font-size: 0.85rem;">
+            Verify Mobile 📱
+          </button>
+        </div>
+      </div>
+
+      <!-- 4. Password -->
+      <div style="margin-bottom: 1.25rem;">
+        <label class="form-label" for="regPassword">Password <span style="color: #ef4444;">*</span></label>
+        <div style="position: relative;">
+          <input type="password" id="regPassword" name="password" class="form-control" placeholder="Create a strong password" required oninput="checkPasswordRules(this.value);" style="padding-right: 2.8rem;">
+          <button type="button" class="password-toggle-btn" data-target="regPassword" title="Toggle password visibility" aria-label="Toggle password visibility">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+              <line x1="1" y1="1" x2="23" y2="23"></line>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- 5. Re-enter Password -->
+      <div style="margin-bottom: 1.25rem;">
+        <label class="form-label" for="regConfirmPassword">Re-enter Password <span style="color: #ef4444;">*</span></label>
+        <div style="position: relative;">
+          <input type="password" id="regConfirmPassword" name="confirm_password" class="form-control" placeholder="Confirm password" required style="padding-right: 2.8rem;">
+          <button type="button" class="password-toggle-btn" data-target="regConfirmPassword" title="Toggle password visibility" aria-label="Toggle password visibility">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+              <line x1="1" y1="1" x2="23" y2="23"></line>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- 6. Password Rule Specifications -->
+      <div style="margin-bottom: 1.5rem; padding: 0.85rem 1rem; border-radius: var(--radius-sm); background: rgba(255, 255, 255, 0.03); border: 1px solid var(--glass-border); font-size: 0.8rem;">
+        <div style="font-weight: 600; color: var(--text-secondary); margin-bottom: 0.35rem;">Password Requirements:</div>
+        <ul style="list-style: none; padding-left: 0; margin: 0;">
+          <li id="ruleLength" style="color: var(--text-muted); margin-bottom: 0.2rem;">✖ Minimum 8 characters</li>
+          <li id="ruleLetters" style="color: var(--text-muted); margin-bottom: 0.2rem;">✖ Contains letters (a-z, A-Z)</li>
+          <li id="ruleNumbers" style="color: var(--text-muted); margin-bottom: 0.2rem;">✖ Contains numbers (0-9)</li>
+          <li id="ruleSpecial" style="color: var(--text-muted);">✖ Contains a special symbol (!@#$%^&* etc.)</li>
+        </ul>
+      </div>
+
+      <!-- Submit Button -->
+      <button type="submit" class="btn-primary-glass" style="width: 100%; padding: 0.85rem; font-size: 1rem;">
+        Complete Registration →
+      </button>
+
+    </form>
+
+    <!-- Login Link -->
+    <div style="text-align: center; margin-top: 1.5rem; font-size: 0.875rem; color: var(--text-secondary);">
+      Already registered? 
+      <a href="{{ url_for('login') }}" style="font-weight: 600;">Sign in here</a>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+function checkPasswordRules(pwd) {
+  const isLen = pwd.length >= 8;
+  const isLetter = /[a-zA-Z]/.test(pwd);
+  const isNumber = /[0-9]/.test(pwd);
+  const isSpecial = /[^a-zA-Z0-9]/.test(pwd);
+
+  updateRuleUI('ruleLength', isLen, 'Minimum 8 characters');
+  updateRuleUI('ruleLetters', isLetter, 'Contains letters (a-z, A-Z)');
+  updateRuleUI('ruleNumbers', isNumber, 'Contains numbers (0-9)');
+  updateRuleUI('ruleSpecial', isSpecial, 'Contains a special symbol (!@#$%^&* etc.)');
+}
+
+function updateRuleUI(id, passed, text) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (passed) {
+    el.innerHTML = `✓ ${text}`;
+    el.style.color = 'var(--color-safe)';
+    el.style.fontWeight = '600';
+  } else {
+    el.innerHTML = `✖ ${text}`;
+    el.style.color = 'var(--text-muted)';
+    el.style.fontWeight = 'normal';
+  }
+}
+
+function validateRegisterForm() {
+  const pwd = document.getElementById('regPassword').value;
+  const confirmPwd = document.getElementById('regConfirmPassword').value;
+  
+  if (pwd !== confirmPwd) {
+    alert('Passwords do not match! Please re-enter your password.');
+    return false;
+  }
+
+  const isLen = pwd.length >= 8;
+  const isLetter = /[a-zA-Z]/.test(pwd);
+  const isNumber = /[0-9]/.test(pwd);
+  const isSpecial = /[^a-zA-Z0-9]/.test(pwd);
+
+  if (!isLen || !isLetter || !isNumber || !isSpecial) {
+    alert('Password does not meet all criteria: minimum 8 characters, must include letters, numbers, and a special symbol.');
+    return false;
+  }
+
+  // Check OTP status or provide seamless auto-verify notice
+  const emailVer = sessionStorage.getItem('verified_email');
+  const phoneVer = sessionStorage.getItem('verified_phone');
+  if (!emailVer || !phoneVer) {
+    const cont = confirm('Notice: For standard registration, Email and Phone should be verified via OTP. Would you like to proceed with auto-verified credentials?');
+    if (!cont) return false;
+  }
+
+  return true;
+}
+</script>
+{% endblock %}

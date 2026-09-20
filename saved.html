@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}Saved Colleges — AP ECET Counselling Forecasting System{% endblock %}
+
+{% block content %}
+<div>
+  
+  <div class="glass-panel" style="padding: 2rem 2.5rem; margin-bottom: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem;">
+      <div>
+        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.35rem;">
+          <span class="badge-safe">My Bookmarks</span>
+          <span style="color: var(--text-muted); font-size: 0.85rem;">{{ saved_colleges|length }} Colleges Saved</span>
+        </div>
+        <h1 style="font-size: 2rem;">Saved Colleges & Shortlist</h1>
+        <p style="color: var(--text-secondary); font-size: 0.95rem;">
+          Colleges you have bookmarked for quick comparison or direct addition to your web options preference list.
+        </p>
+      </div>
+
+      <a href="{{ url_for('colleges_page') }}" class="btn-primary-glass">
+        🔍 Browse More Colleges
+      </a>
+    </div>
+  </div>
+
+  <div class="glass-panel" style="padding: 1.5rem;">
+    {% if saved_colleges %}
+      <div class="glass-table-wrapper">
+        <table class="glass-table">
+          <thead>
+            <tr>
+              <th>Code</th>
+              <th>College Name</th>
+              <th>Place & District</th>
+              <th>Region</th>
+              <th>Type</th>
+              <th>Saved Date</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for s in saved_colleges %}
+              <tr>
+                <td>
+                  <span style="background: rgba(6, 182, 212, 0.2); color: var(--accent-cyan); padding: 0.2rem 0.55rem; border-radius: 4px; font-weight: 700; font-size: 0.85rem;">
+                    {{ s.college_code }}
+                  </span>
+                </td>
+                <td>
+                  <a href="{{ url_for('college_detail', college_code=s.college_code) }}" style="font-weight: 600;">
+                    {{ s.college_name }}
+                  </a>
+                </td>
+                <td>{{ s.place }}, <b>{{ s.district }}</b></td>
+                <td><span class="badge-safe">{{ s.region }}</span></td>
+                <td>{{ s.type or 'PVT' }}</td>
+                <td style="color: var(--text-muted); font-size: 0.8rem;">{{ s.created_at[:10] }}</td>
+                <td>
+                  <div style="display: flex; gap: 0.4rem;">
+                    <a href="{{ url_for('college_detail', college_code=s.college_code) }}" class="btn-secondary-glass" style="padding: 0.35rem 0.65rem; font-size: 0.8rem;">
+                      Profile
+                    </a>
+                    <form method="POST" action="{{ url_for('remove_saved_college', save_id=s.id) }}" style="display:inline;">
+                      <button type="submit" class="btn-secondary-glass" style="padding: 0.35rem 0.65rem; font-size: 0.8rem; color: #ef4444;" title="Remove">
+                        ✕
+                      </button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div style="text-align: center; padding: 3rem 1rem; color: var(--text-muted);">
+        <span style="font-size: 3rem; display: block; margin-bottom: 1rem;">❤️</span>
+        <h3>No Saved Colleges Yet</h3>
+        <p style="max-width: 500px; margin: 0.5rem auto 1.5rem;">
+          Click the "🤍 Save" button on any recommendation card or college profile to bookmark it here.
+        </p>
+        <a href="{{ url_for('colleges_page') }}" class="btn-primary-glass">Browse Colleges Directory</a>
+      </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}
